@@ -1,0 +1,1 @@
+physics_resolve_ball_collision(other);

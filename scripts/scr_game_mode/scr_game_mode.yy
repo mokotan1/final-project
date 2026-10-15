@@ -1,0 +1,10 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_game_mode",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_game_mode",
+  "parent":{"name":"application","path":"folders/Scripts/application.yy"},
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0"
+}

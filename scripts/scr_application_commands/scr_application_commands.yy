@@ -1,0 +1,10 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_application_commands",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_application_commands",
+  "parent":{"name":"application","path":"folders/Scripts/application.yy"},
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0"
+}
