@@ -10,18 +10,50 @@ var _panel = make_color_rgb(16, 79, 58);
 draw_set_font(-1); draw_set_halign(fa_center); draw_set_valign(fa_middle); draw_set_alpha(1);
 draw_sprite(spr_menu_background, 0, 0, 0);
 
+// Independent light layers keep the skyline calm while the bar sign sputters.
+var _night_t = get_timer() * 0.000001;
+var _star_a = 0.35 + 0.40 * (0.5 + 0.5 * sin(_night_t * 2.1));
+draw_sprite_part_ext(spr_menu_stars_glow, 0, 0, 0, 640, 720, 0, 0, 1, 1, c_white, _star_a);
+draw_sprite_part_ext(spr_menu_stars_glow, 0, 640, 0, 640, 720, 640, 0, 1, 1, c_white,
+    0.35 + 0.40 * (0.5 + 0.5 * sin(_night_t * 1.6 + 1.9)));
+draw_sprite_part_ext(spr_menu_windows_glow, 0, 0, 0, 640, 720, 0, 0, 1, 1, c_white,
+    0.35 + 0.50 * (0.5 + 0.5 * sin(_night_t * 0.9 + 0.7)));
+draw_sprite_part_ext(spr_menu_windows_glow, 0, 640, 0, 640, 720, 640, 0, 1, 1, c_white,
+    0.35 + 0.50 * (0.5 + 0.5 * sin(_night_t * 1.2 + 2.4)));
+var _neon_tick = floor(_night_t * 14) mod 71;
+var _neon_a = 0.95;
+if (_neon_tick == 11 || _neon_tick == 13 || _neon_tick == 14) _neon_a = 0.08;
+else if (_neon_tick == 12 || _neon_tick == 15) _neon_a = 0.48;
+draw_sprite_ext(spr_menu_neon_glow, 0, 0, 0, 1, 1, 0, c_white, _neon_a);
+
 if (menu_view == 0) {
-    draw_sprite(spr_menu_static, 0, _cx - 300, 102);
-    if (menu_hover_play) { draw_set_color(_brass); draw_rectangle(_cx - 150, 330, _cx + 150, 390, true); }
-    if (menu_hover_settings) { draw_set_color(_brass); draw_rectangle(_cx - 150, 412, _cx + 150, 472, true); }
-    if (menu_hover_quit) { draw_set_color(_brass); draw_rectangle(_cx - 150, 494, _cx + 150, 554, true); }
-    if (lang_is_korean()) {
-        // The title sprite already contains a smaller CHALLENGE and an English
-        // tagline. Replace that strip with one larger title in Korean mode.
-        draw_set_color(_panel); draw_rectangle(_cx - 220, 232, _cx + 220, 318, false);
-        draw_set_color(make_color_rgb(240, 211, 138));
-        pixel_draw_text_transformed(_cx, 285, "CHALLENGE", 3, 3, 0);
-    }
+    var _menu_x = 500;
+    draw_set_font(lang_font());
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 3, 118, "CUSHION", 5, true);
+    draw_set_color(_cream);
+    pixel_draw_menu_text(_menu_x, 115, "CUSHION", 5, true);
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 2, 172, "CHALLENGE", 3);
+    draw_set_color(_brass);
+    pixel_draw_menu_text(_menu_x, 170, "CHALLENGE", 3);
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 1, 210, tr("RISK. REWARD. ANGLES.", "각도의 승부"), 2);
+    draw_set_color(make_color_rgb(205, 207, 187));
+    pixel_draw_menu_text(_menu_x, 209, tr("RISK. REWARD. ANGLES.", "각도의 승부"), 2);
+
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 2, 492, tr("PLAY", "시작"), 3, menu_hover_play);
+    draw_set_color(menu_hover_play ? _brass : _cream);
+    pixel_draw_menu_text(_menu_x, 490, tr("PLAY", "시작"), 3, menu_hover_play);
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 2, 562, tr("SETTINGS", "설정"), 3, menu_hover_settings);
+    draw_set_color(menu_hover_settings ? _brass : _cream);
+    pixel_draw_menu_text(_menu_x, 560, tr("SETTINGS", "설정"), 3, menu_hover_settings);
+    draw_set_color(c_black);
+    pixel_draw_menu_text(_menu_x + 2, 632, tr("EXIT", "종료"), 3, menu_hover_quit);
+    draw_set_color(menu_hover_quit ? _brass : _cream);
+    pixel_draw_menu_text(_menu_x, 630, tr("EXIT", "종료"), 3, menu_hover_quit);
 }
 
 if (menu_view == 1) {

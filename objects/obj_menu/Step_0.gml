@@ -39,9 +39,10 @@ if (menu_settings_open) {
     exit;
 }
 
-menu_hover_play = point_in_rectangle(_mx, _my, _cx - 150, 330, _cx + 150, 390);
-menu_hover_settings = point_in_rectangle(_mx, _my, _cx - 150, 412, _cx + 150, 472);
-menu_hover_quit = point_in_rectangle(_mx, _my, _cx - 150, 494, _cx + 150, 554);
+var _menu_x = 500;
+menu_hover_play = point_in_rectangle(_mx, _my, _menu_x - 100, 465, _menu_x + 100, 515);
+menu_hover_settings = point_in_rectangle(_mx, _my, _menu_x - 100, 535, _menu_x + 100, 585);
+menu_hover_quit = point_in_rectangle(_mx, _my, _menu_x - 100, 605, _menu_x + 100, 655);
 
 if (menu_view == 0) {
     if (mouse_check_button_pressed(mb_left)) {

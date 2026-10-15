@@ -70,6 +70,47 @@ function pixel_draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle, _b
     }
 }
 
+/// Compact lettering for large menu labels; other HUD text keeps its spacing.
+function pixel_draw_menu_text(_x, _y, _text, _scale, _bold = false) {
+    if (!variable_global_exists("ui_pixel_glyph_map")) lang_font_init();
+    var _map = global.ui_pixel_glyph_map;
+    var _value = string(_text);
+    var _length = string_length(_value);
+    var _size = max(1, round(_scale));
+    var _width = 0;
+    for (var _i = 1; _i <= _length; _i++) {
+        var _char = string_char_at(_value, _i);
+        var _advance = 6;
+        if (ord(_char) > 127) _advance = 12;
+        else if (_char == "I") _advance = 2;
+        else if (_char == " ") _advance = 4;
+        _width += _advance * _size;
+    }
+    var _cursor_x = round(_x - _width * 0.5);
+    var _draw_y = round(_y - 7 * _size);
+    var _color = draw_get_color();
+    var _alpha = draw_get_alpha();
+    for (var _i = 1; _i <= _length; _i++) {
+        var _char = string_char_at(_value, _i);
+        if (_char != " ") {
+            var _frame = string_pos(_char, _map) - 1;
+            if (_frame >= 0) {
+                var _source_x = (_frame mod 16) * 16 + 2;
+                var _source_y = (_frame div 16) * 18 + 2;
+                draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
+                    _cursor_x, _draw_y, _size, _size, _color, _alpha);
+                if (_bold) draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
+                    _cursor_x + 1, _draw_y, _size, _size, _color, _alpha);
+            }
+        }
+        var _advance = 6;
+        if (ord(_char) > 127) _advance = 12;
+        else if (_char == "I") _advance = 2;
+        else if (_char == " ") _advance = 4;
+        _cursor_x += _advance * _size;
+    }
+}
+
 /// Pixel typography helpers for dynamic HUD copy.
 function ui_text_px(_x, _y, _text, _scale = 1, _color = c_white, _bold = false) {
     draw_set_color(_color);
