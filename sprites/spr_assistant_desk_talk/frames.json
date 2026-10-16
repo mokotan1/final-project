@@ -1,0 +1,52 @@
+{
+  "sprite": "spr_assistant_desk_talk",
+  "sheet": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk_sheet.png",
+  "cell_size": [
+    512,
+    512
+  ],
+  "grid": [
+    3,
+    2
+  ],
+  "preview_timing_ms": [
+    600,
+    100,
+    180,
+    330,
+    280,
+    450
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "pose": "rest",
+      "id": "83207f1d-b1b5-5940-a5c2-bbf48f9a8c47"
+    },
+    {
+      "index": 1,
+      "pose": "blink",
+      "id": "a0369d24-472c-5152-95fb-06c5d2d964fe"
+    },
+    {
+      "index": 2,
+      "pose": "speak_rest",
+      "id": "1ccc3839-49ab-51b9-a512-185a1348cb85"
+    },
+    {
+      "index": 3,
+      "pose": "speak_gesture",
+      "id": "447ebbd0-5f04-5c5d-af8b-272de97518e4"
+    },
+    {
+      "index": 4,
+      "pose": "smile_gesture",
+      "id": "01da1af3-0e9c-5c58-b4da-fc701043182a"
+    },
+    {
+      "index": 5,
+      "pose": "settle",
+      "id": "35693037-c26c-5334-9582-f2401880a03d"
+    }
+  ]
+}

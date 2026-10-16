@@ -1,0 +1,44 @@
+{
+  "sprite": "spr_assistant_dialogue",
+  "sheet": "sprites/spr_assistant_dialogue/spr_assistant_dialogue_sheet.png",
+  "cell_size": [
+    342,
+    768
+  ],
+  "grid": [
+    3,
+    2
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "expression": "neutral_closed",
+      "id": "da7a2045-69b7-5ea1-90fd-3b188cf65342"
+    },
+    {
+      "index": 1,
+      "expression": "neutral_talk",
+      "id": "913c5f13-7def-57b9-a7e9-ba9e01c5ed70"
+    },
+    {
+      "index": 2,
+      "expression": "happy_talk",
+      "id": "75f93e69-649b-5008-8159-026c437b692a"
+    },
+    {
+      "index": 3,
+      "expression": "thoughtful_closed",
+      "id": "cf9da33d-fedd-543d-84e3-fa1c93149ad4"
+    },
+    {
+      "index": 4,
+      "expression": "surprised_talk",
+      "id": "db9101ac-a1b7-5b83-83c1-22d63d668696"
+    },
+    {
+      "index": 5,
+      "expression": "reassuring_talk",
+      "id": "d3d01aeb-e6bd-57f1-882f-ac4b77a68a9f"
+    }
+  ]
+}

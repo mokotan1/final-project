@@ -1,0 +1,60 @@
+{
+  "background": "spr_mode_select_bg",
+  "buttons": {
+    "story": {
+      "sprite": "spr_mode_select_story",
+      "draft_position": [
+        695,
+        90
+      ],
+      "size": [
+        381,
+        100
+      ]
+    },
+    "endless": {
+      "sprite": "spr_mode_select_endless",
+      "draft_position": [
+        695,
+        197
+      ],
+      "size": [
+        381,
+        101
+      ]
+    },
+    "classic": {
+      "sprite": "spr_mode_select_classic",
+      "draft_position": [
+        695,
+        304
+      ],
+      "size": [
+        381,
+        102
+      ]
+    },
+    "start": {
+      "sprite": "spr_mode_select_start",
+      "draft_position": [
+        505,
+        520
+      ],
+      "size": [
+        286,
+        85
+      ]
+    },
+    "back": {
+      "sprite": "spr_mode_select_back",
+      "draft_position": [
+        850,
+        520
+      ],
+      "size": [
+        278,
+        85
+      ]
+    }
+  }
+}

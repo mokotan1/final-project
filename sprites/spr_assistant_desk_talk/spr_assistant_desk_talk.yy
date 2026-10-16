@@ -1,0 +1,292 @@
+{
+  "$GMSprite": "v2",
+  "%Name": "spr_assistant_desk_talk",
+  "bboxMode": 0,
+  "bbox_bottom": 511,
+  "bbox_left": 0,
+  "bbox_right": 511,
+  "bbox_top": 0,
+  "collisionKind": 0,
+  "collisionTolerance": 0,
+  "DynamicTexturePage": false,
+  "edgeFiltering": false,
+  "For3D": false,
+  "frames": [
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "83207f1d-b1b5-5940-a5c2-bbf48f9a8c47",
+      "name": "83207f1d-b1b5-5940-a5c2-bbf48f9a8c47",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    },
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "a0369d24-472c-5152-95fb-06c5d2d964fe",
+      "name": "a0369d24-472c-5152-95fb-06c5d2d964fe",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    },
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "1ccc3839-49ab-51b9-a512-185a1348cb85",
+      "name": "1ccc3839-49ab-51b9-a512-185a1348cb85",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    },
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "447ebbd0-5f04-5c5d-af8b-272de97518e4",
+      "name": "447ebbd0-5f04-5c5d-af8b-272de97518e4",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    },
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "01da1af3-0e9c-5c58-b4da-fc701043182a",
+      "name": "01da1af3-0e9c-5c58-b4da-fc701043182a",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    },
+    {
+      "$GMSpriteFrame": "v1",
+      "%Name": "35693037-c26c-5334-9582-f2401880a03d",
+      "name": "35693037-c26c-5334-9582-f2401880a03d",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "2.0"
+    }
+  ],
+  "gridX": 0,
+  "gridY": 0,
+  "height": 512,
+  "HTile": false,
+  "layers": [
+    {
+      "$GMImageLayer": "",
+      "%Name": "359a626e-5af9-4e4b-a7ec-e7a956b6ad0a",
+      "blendMode": 0,
+      "displayName": "default",
+      "isLocked": false,
+      "name": "359a626e-5af9-4e4b-a7ec-e7a956b6ad0a",
+      "opacity": 100.0,
+      "resourceType": "GMImageLayer",
+      "resourceVersion": "2.0",
+      "visible": true
+    }
+  ],
+  "name": "spr_assistant_desk_talk",
+  "nineSlice": null,
+  "origin": 9,
+  "parent": {
+    "name": "final_project",
+    "path": "final_project.yyp"
+  },
+  "preMultiplyAlpha": false,
+  "resourceType": "GMSprite",
+  "resourceVersion": "2.0",
+  "sequence": {
+    "$GMSequence": "v1",
+    "%Name": "spr_assistant_desk_talk",
+    "autoRecord": true,
+    "backdropHeight": 768,
+    "backdropImageOpacity": 0.5,
+    "backdropImagePath": "",
+    "backdropWidth": 1366,
+    "backdropXOffset": 0.0,
+    "backdropYOffset": 0.0,
+    "events": {
+      "$KeyframeStore<MessageEventKeyframe>": "",
+      "Keyframes": [],
+      "resourceType": "KeyframeStore<MessageEventKeyframe>",
+      "resourceVersion": "2.0"
+    },
+    "eventStubScript": null,
+    "eventToFunction": {},
+    "length": 117.0,
+    "lockOrigin": false,
+    "moments": {
+      "$KeyframeStore<MomentsEventKeyframe>": "",
+      "Keyframes": [],
+      "resourceType": "KeyframeStore<MomentsEventKeyframe>",
+      "resourceVersion": "2.0"
+    },
+    "name": "spr_assistant_desk_talk",
+    "playback": 1,
+    "playbackSpeed": 60.0,
+    "playbackSpeedType": 0,
+    "resourceType": "GMSequence",
+    "resourceVersion": "2.0",
+    "showBackdrop": true,
+    "showBackdropImage": false,
+    "timeUnits": 1,
+    "tracks": [
+      {
+        "$GMSpriteFramesTrack": "",
+        "builtinName": 0,
+        "events": [],
+        "inheritsTrackColour": true,
+        "interpolation": 1,
+        "isCreationTrack": false,
+        "keyframes": {
+          "$KeyframeStore<SpriteFrameKeyframe>": "",
+          "Keyframes": [
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "83207f1d-b1b5-5940-a5c2-bbf48f9a8c47",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "6bb77614-a29b-510c-94dd-2e3bf320f927",
+              "IsCreationKey": false,
+              "Key": 0.0,
+              "Length": 36.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            },
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "a0369d24-472c-5152-95fb-06c5d2d964fe",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "4c6b7fcf-08da-5e36-a072-5a4c44d695b6",
+              "IsCreationKey": false,
+              "Key": 36.0,
+              "Length": 6.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            },
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "1ccc3839-49ab-51b9-a512-185a1348cb85",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "1207c253-78f8-5ad4-9cb4-f05cddae6e44",
+              "IsCreationKey": false,
+              "Key": 42.0,
+              "Length": 11.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            },
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "447ebbd0-5f04-5c5d-af8b-272de97518e4",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "f9499353-acaa-5af6-95a2-7815d1ad5eb1",
+              "IsCreationKey": false,
+              "Key": 53.0,
+              "Length": 20.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            },
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "01da1af3-0e9c-5c58-b4da-fc701043182a",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "db9e7167-a32f-5956-9102-d396f39ade22",
+              "IsCreationKey": false,
+              "Key": 73.0,
+              "Length": 17.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            },
+            {
+              "$Keyframe<SpriteFrameKeyframe>": "",
+              "Channels": {
+                "0": {
+                  "$SpriteFrameKeyframe": "",
+                  "Id": {
+                    "name": "35693037-c26c-5334-9582-f2401880a03d",
+                    "path": "sprites/spr_assistant_desk_talk/spr_assistant_desk_talk.yy"
+                  },
+                  "resourceType": "SpriteFrameKeyframe",
+                  "resourceVersion": "2.0"
+                }
+              },
+              "Disabled": false,
+              "id": "b0c698f4-c053-536a-ae2b-8a760d2a8175",
+              "IsCreationKey": false,
+              "Key": 90.0,
+              "Length": 27.0,
+              "resourceType": "Keyframe<SpriteFrameKeyframe>",
+              "resourceVersion": "2.0",
+              "Stretch": false
+            }
+          ],
+          "resourceType": "KeyframeStore<SpriteFrameKeyframe>",
+          "resourceVersion": "2.0"
+        },
+        "modifiers": [],
+        "name": "frames",
+        "resourceType": "GMSpriteFramesTrack",
+        "resourceVersion": "2.0",
+        "spriteId": null,
+        "trackColour": 0,
+        "tracks": [],
+        "traits": 0
+      }
+    ],
+    "visibleRange": null,
+    "volume": 1.0,
+    "xorigin": 256,
+    "yorigin": 512
+  },
+  "swatchColours": null,
+  "swfPrecision": 2.525,
+  "textureGroupId": {
+    "name": "Default",
+    "path": "texturegroups/Default"
+  },
+  "type": 0,
+  "VTile": false,
+  "width": 512
+}
