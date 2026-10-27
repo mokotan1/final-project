@@ -1,0 +1,39 @@
+
+***************************************
+ *     GameMaker v2026.0.0.23    *
+***************************************
+Setting scheduler resolution to 1
+Attempting to use high process priority settings
+Set process priority to HIGH_PRIORITY_CLASS
+Set main thread priority to HIGHEST
+Registered with MMCSS 'Games' task
+Set MMCSS thread priority to CRITICAL
+Reading File D:\final_project\Build\verify_project.win took 0 ms
+DirectX11: Using hardware device
+Collision Event time(microsecs)=4
+Variable_Global_Init()
+PrepareGame()
+Audio_Init()
+Audio group 0 -> Loaded
+Attempting to set gamepadcount to 12
+No gamepad mapping found for GUID 03000000160400004782000000000000
+No gamepad mapping found for GUID 03000000160400004782000000000000
+Game_Prepare()
+Script_Prepare() 
+TimeLine_Prepare() 
+Object_Prepare() 
+Room_Prepare() 
+Finished PrepareGame() 
+Run_Start
+Done g_EffectsManager.Init()
+Done RenderStateManager
+CreateColPairs took 0.000000s 4 usecs for 13 object types obj_col_numb=0 physobjcount=5 resizes 0 final size 20
+Done ObjectLists
+Done Extension_Initialize
+About to startroom
+Total memory used = 14433675 (0x00dc3d8b) bytes 13.77MB
+Free memory = 6161848 (0x005e05b8) bytes 5.88MB
+Peak memory used = 14599049 (0x00dec389) bytes 13.92MB
+**********************************.
+Entering main loop.
+**********************************.

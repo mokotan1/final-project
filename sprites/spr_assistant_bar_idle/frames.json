@@ -1,0 +1,13 @@
+{
+  "sprite": "spr_assistant_bar_idle",
+  "cell_size": [512, 512],
+  "preview_timing_ms": [1000, 90, 1600],
+  "timing_frames_at_60fps": [60, 5, 96],
+  "loop": true,
+  "notes": "Transparent upper-body idle; both forearms rest at the lower edge for counter occlusion.",
+  "frames": [
+    { "index": 0, "pose": "open_rest", "id": "7e1c1d3e-8e9b-4c4f-9b4e-6a8f6ed5d1a1" },
+    { "index": 1, "pose": "blink", "id": "6b9b2b7f-5f57-4d0c-97d2-422c3a7bc8d4" },
+    { "index": 2, "pose": "open_rest", "id": "1c3bc4fd-6f3e-45a0-a34b-89f943c5e6c2" }
+  ]
+}

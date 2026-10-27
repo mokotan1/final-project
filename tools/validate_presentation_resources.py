@@ -60,7 +60,7 @@ for room_name, object_name in (("rm_menu", "obj_menu"), ("rm_game", "obj_game"))
     assert '"Width":1280' in room and '"Height":720' in room
     assert f'"name":"{object_name}"' in room
 ui_step = (ROOT / "objects" / "obj_ui" / "Step_0.gml").read_text(encoding="utf-8")
-assert "application_use_inventory_item(_inventory_index)" in ui_step
+assert "application_use_inventory_item(_ready_index)" in ui_step
 assert "ui_inventory_page" in ui_step
 result_step = (ROOT / "objects" / "obj_result" / "Step_0.gml").read_text(encoding="utf-8")
 assert "application_restart_game()" in result_step
@@ -72,8 +72,10 @@ ui_draw = (ROOT / "objects" / "obj_ui" / "Draw_64.gml").read_text(encoding="utf-
 ui_create = (ROOT / "objects" / "obj_ui" / "Create_0.gml").read_text(encoding="utf-8")
 result_draw = (ROOT / "objects" / "obj_result" / "Draw_64.gml").read_text(encoding="utf-8")
 rules_source = (ROOT / "scripts" / "scr_game_rules" / "scr_game_rules.gml").read_text(encoding="utf-8")
-assert "font_add_sprite_ext(spr_ui_pixel_font" in ui_create
-assert "global.ui_pixel_font" in ui_draw
+localization = (ROOT / "scripts" / "scr_localization" / "scr_localization.gml").read_text(encoding="utf-8")
+assert "lang_font_init()" in ui_create
+assert "pixel_draw_text" in ui_draw
+assert "font_add_sprite_ext" not in localization
 assert "draw_set_font(-1)" not in ui_draw and "draw_set_font(-1)" not in result_draw
 assert "fnt_ui" not in ui_draw and "fnt_ui" not in result_draw
 # Cushion callouts use the pixel font at readable size and live for 84 frames

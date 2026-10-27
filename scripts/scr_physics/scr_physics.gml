@@ -79,19 +79,29 @@ function physics_scan_ball_collisions() {
             with (_owner) {
                 physics_resolve_ball_collision(_candidate);
 
-                if (object_index == obj_ball_player && physics_begin_rule_contact(_candidate)) {
+                var _striker_here = (story_versus_active())
+                    ? story_versus_striker_counts_cushions(_owner)
+                    : (_owner.object_index == obj_ball_player);
+                if (_striker_here && physics_begin_rule_contact(_candidate)) {
                     if (_candidate.object_index == obj_ball_target) {
-                        if (rules_on_target_hit(id, _candidate, cushion_count) && !global.shot_penalized && !global.score_gain_fx.active) audio_sfx("snd_payout", 0.7);
+                        if (rules_on_target_hit(_owner, _candidate, _owner.cushion_count) && !global.shot_penalized && !global.score_gain_fx.active) audio_sfx("snd_payout", 0.7);
                     } else if (_candidate.object_index == obj_ball_foul) {
-                        if (rules_on_foul_hit(id, _candidate)) audio_sfx(global.risk_shot_active ? "snd_risk_wipe" : "snd_foul", 0.95);
+                        if (!story_versus_break_foul_rules_suppressed()
+                            && rules_on_foul_hit(_owner, _candidate))
+                            audio_sfx(global.risk_shot_active ? "snd_risk_wipe" : "snd_foul", 0.95);
                     }
-                } else if (_candidate.object_index == obj_ball_player) {
+                } else if (_candidate.object_index == obj_ball_player || _candidate.object_index == obj_ball_ai) {
                     with (_candidate) {
-                        if (physics_begin_rule_contact(_owner)) {
+                        var _striker_there = (story_versus_active())
+                            ? story_versus_striker_counts_cushions(id)
+                            : (object_index == obj_ball_player);
+                        if (_striker_there && physics_begin_rule_contact(_owner)) {
                             if (_owner.object_index == obj_ball_target) {
                                 if (rules_on_target_hit(id, _owner, cushion_count) && !global.shot_penalized && !global.score_gain_fx.active) audio_sfx("snd_payout", 0.7);
                             } else if (_owner.object_index == obj_ball_foul) {
-                                if (rules_on_foul_hit(id, _owner)) audio_sfx(global.risk_shot_active ? "snd_risk_wipe" : "snd_foul", 0.95);
+                                if (!story_versus_break_foul_rules_suppressed()
+                                    && rules_on_foul_hit(id, _owner))
+                                    audio_sfx(global.risk_shot_active ? "snd_risk_wipe" : "snd_foul", 0.95);
                             }
                         }
                     }
@@ -143,7 +153,8 @@ function physics_resolve_table_bounds() {
 
     if (_hit && physics_cushion_lock <= 0) {
         physics_cushion_lock = 3;
-        if (object_index == obj_ball_player) {
+        var _counts = (story_versus_active()) ? story_versus_striker_counts_cushions(id) : (object_index == obj_ball_player);
+        if (_counts) {
             if (!variable_global_exists("shot_scored") || !global.shot_scored) {
                 cushion_count += 1;
                 if (rules_on_cushion_hit(id, cushion_count)) audio_sfx("snd_cushion", 0.42, audio_cushion_pitch(cushion_count));
@@ -218,7 +229,9 @@ function physics_all_balls_stopped() {
 
 function physics_shoot(_ball, _direction, _power) {
     if (!instance_exists(_ball) || _power <= 0 || !physics_all_balls_stopped()) return false;
-    if (!rules_on_shot_started(_ball)) return false;
+    if (story_versus_active()) {
+        if (!story_versus_on_shot_started(_ball)) return false;
+    } else if (!rules_on_shot_started(_ball)) return false;
     _ball.cushion_count = 0;
     _ball.hspeed = lengthdir_x(_power, _direction);
     _ball.vspeed = lengthdir_y(_power, _direction);

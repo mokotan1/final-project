@@ -47,8 +47,15 @@ function application_use_inventory_item(_index) {
     return _applied;
 }
 
+function application_story_purchase_item(_item) {
+    if (!story_versus_active()) return false;
+    return story_versus_purchase_item(_item);
+}
+
 function application_place_player_ball(_player_ball, _x, _y) {
     if (!global.place_mode || global.balls_moving || !instance_exists(_player_ball)) return false;
+    if (story_versus_active() && (global.story_match_over
+        || global.story_turn != STORY_TURN_PLAYER || story_versus_input_locked())) return false;
 
     var _bounds = physics_table_bounds();
     var _radius = variable_instance_exists(_player_ball, "physics_radius") ? _player_ball.physics_radius : 16;
@@ -100,6 +107,13 @@ function application_start_game(_mode) {
     game_mode_ensure();
     global.game_mode = (_mode == GAME_MODE_CLASSIC) ? GAME_MODE_CLASSIC : GAME_MODE_ENDLESS;
     return application_restart_game();
+}
+
+function application_start_story() {
+    global.story_intro_match = true;
+    var _story_room = asset_get_index("rm_story_ai_verify");
+    if (_story_room != -1) room_goto(_story_room);
+    return _story_room != -1;
 }
 
 function application_go_to_main_menu() {

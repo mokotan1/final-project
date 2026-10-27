@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "state_order": ["normal", "hover", "selected"],
+  "state_usage": {
+    "normal": "default pointer state",
+    "hover": "pointer is over the button; brighter fill and accent outline",
+    "selected": "mode is active or button is pressed; darker pressed fill with accent edge"
+  },
+  "buttons": {
+    "story": {
+      "source": "sprites/spr_mode_select_story/spr_mode_select_story.png",
+      "resource": "sprites/spr_mode_select_story_states/spr_mode_select_story_states.yy",
+      "states": "sprites/spr_mode_button_states/story/{normal,hover,selected}.png",
+      "position": {"x": 695, "y": 90},
+      "size": {"width": 381, "height": 100},
+      "frame_order": ["normal", "hover", "selected"]
+    },
+    "endless": {
+      "source": "sprites/spr_mode_select_endless/spr_mode_select_endless.png",
+      "resource": "sprites/spr_mode_select_endless_states/spr_mode_select_endless_states.yy",
+      "states": "sprites/spr_mode_button_states/endless/{normal,hover,selected}.png",
+      "position": {"x": 695, "y": 197},
+      "size": {"width": 381, "height": 101},
+      "frame_order": ["normal", "hover", "selected"]
+    },
+    "classic": {
+      "source": "sprites/spr_mode_select_classic/spr_mode_select_classic.png",
+      "resource": "sprites/spr_mode_select_classic_states/spr_mode_select_classic_states.yy",
+      "states": "sprites/spr_mode_button_states/classic/{normal,hover,selected}.png",
+      "position": {"x": 695, "y": 304},
+      "size": {"width": 381, "height": 102},
+      "frame_order": ["normal", "hover", "selected"]
+    },
+    "start": {
+      "source": "sprites/spr_mode_select_start/spr_mode_select_start.png",
+      "resource": "sprites/spr_mode_select_start_states/spr_mode_select_start_states.yy",
+      "states": "sprites/spr_mode_button_states/start/{normal,hover,selected}.png",
+      "position": {"x": 505, "y": 520},
+      "size": {"width": 286, "height": 85},
+      "frame_order": ["normal", "hover", "selected"]
+    }
+  }
+}

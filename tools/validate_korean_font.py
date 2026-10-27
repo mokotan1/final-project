@@ -8,19 +8,29 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 manifest = (ROOT / "tools" / "korean_glyphs.txt").read_text(encoding="utf-8")
-font_line = next(
-    line for line in (ROOT / "scripts" / "scr_localization" / "scr_localization.gml")
-    .read_text(encoding="utf-8").splitlines()
-    if "global.ui_pixel_font_ko = font_add_sprite_ext" in line
-)
-hangul_map = font_line.split("}~", 1)[1].split('"', 1)[0]
-assert len(manifest) >= 95 and manifest[95:] == hangul_map, "sprite frames and runtime glyph map differ"
-direct_line = next(
-    line for line in (ROOT / "scripts" / "scr_localization" / "scr_localization.gml")
-    .read_text(encoding="utf-8").splitlines()
-    if "global.ui_pixel_glyph_map = " in line
-)
-assert direct_line.split("}~", 1)[1].split('"', 1)[0] == manifest[95:], "direct sprite map differs"
+localization_text = (ROOT / "scripts" / "scr_localization" / "scr_localization.gml").read_text(encoding="utf-8")
+direct_line = next(line for line in localization_text.splitlines() if "global.ui_pixel_glyph_map = " in line)
+
+
+def _parse_gml_quoted_string(line: str) -> str:
+    start = line.index('= "') + 3
+    chars = []
+    i = start
+    while i < len(line):
+        ch = line[i]
+        if ch == "\\" and i + 1 < len(line):
+            chars.append(line[i + 1])
+            i += 2
+            continue
+        if ch == '"':
+            break
+        chars.append(ch)
+        i += 1
+    return "".join(chars)
+
+
+glyph_map = _parse_gml_quoted_string(direct_line)
+assert glyph_map == manifest, "runtime glyph map differs from korean_glyphs.txt"
 
 sprite_dir = ROOT / "sprites" / "spr_ui_pixel_font_ko"
 sprite_meta = (sprite_dir / "spr_ui_pixel_font_ko.yy").read_text(encoding="utf-8")

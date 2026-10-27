@@ -33,7 +33,7 @@ if (instance_exists(obj_cue) && variable_instance_exists(obj_cue, "power_normali
     _power = clamp(obj_cue.power_normalized, 0, 1);
 }
 
-draw_set_font(lang_font());
+lang_font_init();
 draw_set_alpha(1);
 
 // Cushion hits build a short visual chain; the target hit cashes it out.
@@ -73,7 +73,7 @@ if (variable_global_exists("cushion_fx")) {
         var _bonus_label = "x" + string(power(_fx.risk ? 10 : 2, _fx.count));
         var _label = "CUSHION " + string(_fx.count) + "   " + _bonus_label;
         var _label_scale = 3;
-        var _half_label_width = string_width(_label) * _label_scale * 0.5;
+        var _half_label_width = pixel_text_width(_label) * _label_scale * 0.5;
         var _label_x = clamp(round(_fx.x + ((_fx_i mod 2) == 0 ? -10 : 10)), _half_label_width + 8, _gui_w - _half_label_width - 8);
         draw_set_color(c_black);
         draw_set_alpha(0.7 * (1 - _text_progress));
@@ -97,12 +97,12 @@ if (variable_global_exists("payout_fx")) {
         // Keep pixel glyphs crisp at the same integer scale as cushion labels;
         // only step down when a long value cannot fit the GUI width.
         var _pay_scale = 3;
-        if (string_width(_pay_label) * _pay_scale > _gui_w - 32) _pay_scale = 2;
-        if (string_width(_pay_label) * _pay_scale > _gui_w - 32) _pay_scale = 1;
+        if (pixel_text_width(_pay_label) * _pay_scale > _gui_w - 32) _pay_scale = 2;
+        if (pixel_text_width(_pay_label) * _pay_scale > _gui_w - 32) _pay_scale = 1;
         var _pay_sub_scale = 2;
-        if (string_width(_pay_sub_label) * _pay_sub_scale > _gui_w - 32) _pay_sub_scale = 1;
-        var _pay_half_width = string_width(_pay_label) * _pay_scale * 0.5;
-        var _pay_sub_half_width = string_width(_pay_sub_label) * _pay_sub_scale * 0.5;
+        if (pixel_text_width(_pay_sub_label) * _pay_sub_scale > _gui_w - 32) _pay_sub_scale = 1;
+        var _pay_half_width = pixel_text_width(_pay_label) * _pay_scale * 0.5;
+        var _pay_sub_half_width = pixel_text_width(_pay_sub_label) * _pay_sub_scale * 0.5;
         var _pay_half_max = max(_pay_half_width, _pay_sub_half_width);
         var _pay_x = clamp(_pay.x, _pay_half_max + 8, _gui_w - _pay_half_max - 8);
         var _pay_y = max(150, _pay.y - 42 - 42 * _pay_progress);
@@ -162,6 +162,11 @@ draw_set_alpha(1);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
+if (story_versus_active()) {
+    story_versus_draw_hud();
+    exit;
+}
+
 // Keep all gameplay HUD content above the table rail (y ~= 76) in the native
 // 1280 x 720 GUI space, with bounded columns so labels stay inside the panel.
 var _power_left = 24;
@@ -188,9 +193,9 @@ draw_roundrect(_power_left, 8, _power_right, 76, false);
 draw_set_color(make_color_rgb(213, 168, 85));
 ui_text_fit_px(_power_left + 14, 12, tr("POWER", "파워"), _power_right - _power_left - 28, 2, make_color_rgb(213, 168, 85));
 draw_set_color(make_color_rgb(42, 60, 63));
-draw_roundrect(_power_left + 14, 42, _power_right - 14, 58, false);
+draw_roundrect(_power_left + 14, 50, _power_right - 14, 66, false);
 draw_set_color(make_color_rgb(237, 187, 76));
-draw_roundrect(_power_left + 14, 42, _power_left + 14 + (_power_right - _power_left - 28) * _power, 58, false);
+draw_roundrect(_power_left + 14, 50, _power_left + 14 + (_power_right - _power_left - 28) * _power, 66, false);
 
 draw_set_color(make_color_rgb(10, 23, 27));
 draw_roundrect(_panel_left, 8, _panel_right, 76, false);
@@ -246,21 +251,32 @@ pixel_draw_text(_gui_w * 0.5, ui_inventory_y - 34, tr("INVENTORY", "인벤토리
 
 for (var _i = 0; _i < ui_slot_count; _i++) {
     var _x = _start_x + _i * (ui_slot_size + ui_slot_gap);
-    draw_sprite_stretched(spr_inventory_slot, 0, _x, ui_inventory_y, ui_slot_size, ui_slot_size);
     var _inventory_index = ui_inventory_page * ui_slot_count + _i;
+    var _slot_hover = ui_button_hit(device_mouse_x_to_gui(0), device_mouse_y_to_gui(0),
+        _x, ui_inventory_y, ui_slot_size, ui_slot_size);
+    var _slot_state = (_inventory_index >= _inventory_length) ? UI_BUTTON_DISABLED
+        : ui_button_state(_slot_hover, ui_button_is_pressed(id, "inv" + string(_inventory_index)));
+    ui_button_draw("", _x, ui_inventory_y, ui_slot_size, ui_slot_size, true, _slot_state);
     if (_inventory_index < _inventory_length) {
         var _item = global.inventory[_inventory_index];
         var _icon = -1;
         if (_item == rules_item_move()) _icon = spr_item_move;
         else if (_item == rules_item_risk_shot()) _icon = spr_item_risk_shot;
         else if (_item == rules_item_remove_foul()) _icon = spr_item_remove;
-        if (_icon != -1) draw_sprite(_icon, 0, _x + ui_slot_size * 0.5, ui_inventory_y + ui_slot_size * 0.5);
+        if (_icon != -1) draw_sprite_ext(_icon, 0, _x + ui_slot_size * 0.5,
+            ui_inventory_y + ui_slot_size * 0.5, 0.7, 0.7, 0, c_white, 1);
     }
 }
 
+ui_button_draw("<", _start_x - 48, ui_inventory_y, 40, ui_slot_size, true,
+    ui_inventory_page <= 0 ? UI_BUTTON_DISABLED
+        : ui_button_state(ui_button_hit(device_mouse_x_to_gui(0), device_mouse_y_to_gui(0),
+            _start_x - 48, ui_inventory_y, 40, ui_slot_size), ui_button_is_pressed(id, "pageprev")));
+ui_button_draw(">", _start_x + _total_w + 8, ui_inventory_y, 40, ui_slot_size, true,
+    ui_inventory_page >= _pages - 1 ? UI_BUTTON_DISABLED
+        : ui_button_state(ui_button_hit(device_mouse_x_to_gui(0), device_mouse_y_to_gui(0),
+            _start_x + _total_w + 8, ui_inventory_y, 40, ui_slot_size), ui_button_is_pressed(id, "pagenext")));
 draw_set_color(make_color_rgb(213, 168, 85));
-pixel_draw_text(_start_x - 28, ui_inventory_y + ui_slot_size * 0.5, "<");
-pixel_draw_text(_start_x + _total_w + 28, ui_inventory_y + ui_slot_size * 0.5, ">");
 pixel_draw_text(_gui_w * 0.5, ui_inventory_y + ui_slot_size + 10, string(ui_inventory_page + 1) + " / " + string(_pages));
 }
 
@@ -278,8 +294,9 @@ if (_items_on && variable_global_exists("reward_choice_open") && global.reward_c
     pixel_draw_text(_gui_w * 0.5, 268, tr("OWNED  ", "소유  ") + string(array_length(global.inventory)));
     for (var _choice = 1; _choice <= 3; _choice++) {
         var _cx = _gui_w * 0.5 - 180 + (_choice - 1) * 120;
-        draw_set_color(make_color_rgb(213, 168, 85));
-        draw_roundrect(_cx, 280, _cx + 100, 390, false);
+        ui_button_draw("", _cx, 280, 100, 110, true,
+            ui_button_state(ui_button_hit(device_mouse_x_to_gui(0), device_mouse_y_to_gui(0),
+                _cx, 280, 100, 110), ui_button_is_pressed(id, "reward" + string(_choice))));
         var _icon = (_choice == 1) ? spr_item_move : ((_choice == 2) ? spr_item_risk_shot : spr_item_remove);
         draw_sprite(_icon, 0, _cx + 50, 325);
         draw_set_color(c_white);
@@ -347,34 +364,11 @@ if (_items_on && !(variable_global_exists("game_settings_open") && global.game_s
     }
 }
 
-// Reuse the menu's pixel-art settings panel while the game is paused. The
-// button labels are replaced here because the menu's equivalent says DONE.
 if (variable_global_exists("game_settings_open") && global.game_settings_open) {
     draw_sprite(global.audio_enabled ? spr_menu_settings_on : spr_menu_settings_off, 0, 0, 0);
-    draw_set_halign(fa_center);
-    draw_set_valign(fa_middle);
-    draw_set_font(lang_font());
     var _settings_cx = _gui_w * 0.5;
-    draw_set_color(make_color_rgb(16, 79, 58)); draw_rectangle(_settings_cx - 290, 145, _settings_cx + 290, 605, false);
-    draw_set_color(make_color_rgb(211, 169, 78)); draw_rectangle(_settings_cx - 278, 157, _settings_cx + 278, 593, true);
-    draw_set_color(make_color_rgb(211, 169, 78)); pixel_draw_text_transformed(_settings_cx, 218, tr("SETTINGS", "설정"), 2, 2, 0, true);
-    draw_set_color(make_color_rgb(164, 188, 173)); pixel_draw_text_transformed(_settings_cx, 274, tr("SOUND", "음량"), 2, 2, 0, true);
-    var _settings_volume = audio_volume_get();
-    var _settings_bar_l = _settings_cx - 240; var _settings_bar_r = _settings_cx + 240;
-    draw_set_color(make_color_rgb(39, 47, 43)); draw_rectangle(_settings_bar_l, 320, _settings_bar_r, 344, false);
-    draw_set_color(make_color_rgb(211, 169, 78)); draw_rectangle(_settings_bar_l, 320, _settings_bar_l + (_settings_bar_r - _settings_bar_l) * _settings_volume, 344, false);
-    draw_set_color(make_color_rgb(236, 231, 204)); draw_rectangle(_settings_bar_l + (_settings_bar_r - _settings_bar_l) * _settings_volume - 8, 312, _settings_bar_l + (_settings_bar_r - _settings_bar_l) * _settings_volume + 8, 352, false);
-    draw_set_color(make_color_rgb(211, 169, 78)); pixel_draw_text_transformed(_settings_cx, 378, string(round(_settings_volume * 100)) + "%", 2, 2, 0, true);
-    draw_set_color(make_color_rgb(164, 188, 173)); pixel_draw_text_transformed(_settings_cx, 410, tr("LANGUAGE", "언어"), 2, 2, 0, true);
-    draw_set_color(make_color_rgb(211, 169, 78)); pixel_draw_text_transformed(_settings_cx, 452, lang_is_korean() ? "한국어" : "ENGLISH", 3, 3, 0, true);
-    draw_set_color(make_color_rgb(68, 40, 27));
-    draw_rectangle(_settings_cx - 120, 478, _settings_cx + 120, 532, false);
-    draw_set_color(make_color_rgb(236, 231, 204));
-    pixel_draw_text_transformed(_settings_cx, 505, "RESUME", 2, 2, 0, true);
-    draw_set_color(make_color_rgb(68, 40, 27));
-    draw_rectangle(_gui_w * 0.5 - 125, 535, _gui_w * 0.5 + 125, 589, false);
-    draw_set_color(make_color_rgb(236, 231, 204));
-    pixel_draw_text_transformed(_gui_w * 0.5, 562, "MAIN MENU", 2, 2, 0, true);
+    ui_settings_panel_draw(_settings_cx, "RESUME", ui_button_state(settings_hover_resume, ui_button_is_pressed(id, "resume")),
+        "MAIN MENU", ui_button_state(settings_hover_main_menu, ui_button_is_pressed(id, "menu")));
 }
 
 draw_set_halign(fa_left);

@@ -1,3 +1,10 @@
+if (story_versus_active() && !story_versus_is_human_turn()) {
+    dragging = false;
+    drag_power = 0;
+    power_normalized = 0;
+    exit;
+}
+
 if (variable_global_exists("game_settings_open") && global.game_settings_open) {
     dragging = false;
     drag_power = 0;
@@ -23,7 +30,18 @@ if (!_can_shoot) {
 
 aim_direction = point_direction(mouse_x, mouse_y, player.x, player.y);
 
-if (mouse_check_button_pressed(mb_left) && point_distance(mouse_x, mouse_y, player.x, player.y) <= 56) {
+// Match the cue drawn at 28px from the ball. The sprite's visible pixels span
+// local x=2..217 and y=4..11 around its (0, 8) origin.
+var _cue_angle = point_direction(player.x, player.y, mouse_x, mouse_y);
+var _cue_near_x = player.x + lengthdir_x(28, _cue_angle);
+var _cue_near_y = player.y + lengthdir_y(28, _cue_angle);
+var _mouse_dx = mouse_x - _cue_near_x;
+var _mouse_dy = mouse_y - _cue_near_y;
+var _cue_along = _mouse_dx * dcos(_cue_angle) - _mouse_dy * dsin(_cue_angle);
+var _cue_across = _mouse_dx * dsin(_cue_angle) + _mouse_dy * dcos(_cue_angle);
+var _cue_hit = _cue_along >= -4 && _cue_along <= 223 && abs(_cue_across) <= 10;
+
+if (mouse_check_button_pressed(mb_left) && _cue_hit) {
     dragging = true;
 }
 

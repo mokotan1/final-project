@@ -1,0 +1,8 @@
+{
+  "canvas": {"width": 1280, "height": 720, "reference_background": "spr_mode_select_bg"},
+  "sprite": {"name": "spr_mode_speech_bubble", "width": 640, "height": 200, "origin": "top_left", "tail_direction": "left"},
+  "recommended_anchor": {"x": 600, "y": 405, "reason": "Uses the former BACK area and space below the mode buttons while keeping START at (505,520) clear."},
+  "text_safe_area": {"x": 92, "y": 25, "width": 520, "height": 125, "max_lines": 2, "line_spacing_px": 12, "padding_px": {"left": 20, "right": 20, "top": 12, "bottom": 12}},
+  "mode_button_positions": {"story": {"x": 695, "y": 90}, "endless": {"x": 695, "y": 197}, "classic": {"x": 695, "y": 304}, "start": {"x": 505, "y": 520}},
+  "palette": {"outline": "#160D0B", "teal_dark": "#063D3C", "gold": "#E7A83B", "gold_highlight": "#FFD873", "copper_shadow": "#8D432B"}
+}

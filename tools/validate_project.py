@@ -63,9 +63,9 @@ for resource_path in paths:
                 f"unregistered parent folder for {resource_path}: {parent_path}")
 
 order = re.findall(r'"roomId":\{"name":"([^"]+)","path":"([^"]+)"', project_text)
-require([name for name, _ in order][:2] == ["rm_menu", "rm_game"]
+require([name for name, _ in order][:3] == ["rm_story_intro", "rm_menu", "rm_game"]
         and "rm_result" not in [name for name, _ in order],
-        f"menu and game must lead, with no separate result room: {[name for name, _ in order]}")
+        f"story intro, menu, and game must lead, with no separate result room: {[name for name, _ in order]}")
 
 menu_room = (ROOT / "rooms/rm_menu/rm_menu.yy").read_text(encoding="utf-8")
 require('"Width":1280' in menu_room and '"Height":720' in menu_room, "rm_menu must be 1280 x 720")
@@ -128,7 +128,8 @@ for object_yy in (ROOT / "objects").glob("*/*.yy"):
         event_type = event["eventType"]
         event_num = event["eventNum"]
         if event_type == 4:
-            filename = f'Collision_{event["collisionObjectId"]["name"]}.gml'
+            collision_target = event.get("collisionObjectId")
+            filename = f'Collision_{collision_target["name"] if collision_target else object_yy.stem}.gml'
         else:
             require(event_type in event_prefix,
                     f"validator needs an event mapping for type {event_type} in {object_yy}")

@@ -4,7 +4,10 @@
   "isCompatibility":false,
   "isDnD":false,
   "name":"scr_physics",
-  "parent":{"name":"physics","path":"folders/Scripts/Domain/Physics.yy"},
+  "parent":{
+    "name":"Physics",
+    "path":"folders/Scripts/Domain/Physics.yy",
+  },
   "resourceType":"GMScript",
-  "resourceVersion":"2.0"
+  "resourceVersion":"2.0",
 }

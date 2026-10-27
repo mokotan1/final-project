@@ -4,7 +4,10 @@
   "isCompatibility":false,
   "isDnD":false,
   "name":"scr_localization",
-  "parent":{"name":"application","path":"folders/Scripts/application.yy",},
+  "parent":{
+    "name":"application",
+    "path":"folders/Scripts/application.yy",
+  },
   "resourceType":"GMScript",
-  "resourceVersion":"2.0"
+  "resourceVersion":"2.0",
 }

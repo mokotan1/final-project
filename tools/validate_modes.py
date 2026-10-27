@@ -11,7 +11,7 @@ r_key = (ROOT / "objects/obj_game/KeyPress_82.gml").read_text(encoding="utf-8")
 
 import re
 order = re.findall(r'"roomId":\{"name":"([^"]+)"', project)
-assert order[:2] == ["rm_menu", "rm_game"] and "rm_result" not in order
+assert order[:3] == ["rm_story_intro", "rm_menu", "rm_game"] and "rm_result" not in order
 assert "rules_process_classic_foul_pressure" in rules
 assert "rules_process_progression" in rules
 assert "application_start_game" in application

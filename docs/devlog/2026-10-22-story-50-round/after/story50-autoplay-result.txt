@@ -1,0 +1,1 @@
+pairs=50 player=4000 ai=65500 winner=1

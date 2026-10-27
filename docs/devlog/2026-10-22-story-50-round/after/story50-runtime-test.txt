@@ -1,0 +1,1 @@
+PASS case0(pairs=50,winner=0,id=RESULT-WIN);case1(pairs=50,winner=1,id=RESULT-LOSE);case2(pairs=50,winner=-1,id=RESULT-DRAW);case3(pairs=50,winner=-1,id=RESULT-DRAW);case4(pairs=5,winner=1,id=RESULT-LOSE); checks=rule1/2/3,turn25/40/50,risk0/1/2/6/7,scorecap,ai-tiers,gentle-cap,gentle-display,place-lock,break,break-pass,ai-pass,result-data

@@ -9,7 +9,10 @@
   "managed":true,
   "name":"obj_ui",
   "overriddenProperties":[],
-  "parent":{"name":"final_project","path":"final_project.yyp",},
+  "parent":{
+    "name":"final_project",
+    "path":"final_project.yyp",
+  },
   "parentObjectId":null,
   "persistent":false,
   "physicsAngularDamping":0.1,

@@ -1,0 +1,35 @@
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+
+const require = createRequire(pathToFileURL('C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/package.json'));
+const { Workbook, SpreadsheetFile } = require('@oai/artifact-tool');
+const dir = new URL('.', import.meta.url);
+const rows = JSON.parse(await fs.readFile(new URL('story_dialogue.json', dir), 'utf8'));
+const ids = rows.map(r => r.id);
+if (ids.length !== new Set(ids).size) throw new Error('Duplicate dialogue ID');
+const required = ['id','chapter','stage','trigger','speaker','line','direction'];
+for (const row of rows) if (required.some(k => typeof row[k] !== 'string')) throw new Error(`Incomplete dialogue row: ${row.id}`);
+
+const workbook = Workbook.create();
+const sheet = workbook.worksheets.add('대사');
+sheet.getRange('A1:G1').merge();
+sheet.getRange('A1').values = [['바의 계약 · 스토리 대사표']];
+sheet.getRange('A2:G2').merge();
+sheet.getRange('A2').values = [['첫 실행 도입 · 대결 반응 · 후속 스토리 기획 대사 | JSON 원본 기준']];
+sheet.getRange('A4:G4').values = [['ID','챕터','스테이지','트리거','화자','대사','연출·구현 메모']];
+const end = rows.length + 4;
+sheet.getRange(`A5:G${end}`).values = rows.map(r => [r.id,r.chapter,r.stage,r.trigger,r.speaker,r.line,r.direction]);
+sheet.getRange(`A1:G${end}`).format = {font:{name:'Malgun Gothic',size:11,color:'#263238'},verticalAlignment:'center'};
+sheet.getRange('A1:G1').format = {fill:'#263238',font:{name:'Malgun Gothic',size:17,bold:true,color:'#FFFFFF'},rowHeightPx:40};
+sheet.getRange('A2:G2').format = {fill:'#FFF2D6',font:{name:'Malgun Gothic',size:10,color:'#785A26'},rowHeightPx:28};
+sheet.getRange('A4:G4').format = {fill:'#5E3929',font:{name:'Malgun Gothic',size:11,bold:true,color:'#FFFFFF'},rowHeightPx:30};
+sheet.getRange(`A5:G${end}`).format = {rowHeightPx:70,wrapText:true};
+for (const [col,width] of [['A',185],['B',80],['C',115],['D',170],['E',75],['F',520],['G',380]]) sheet.getRange(`${col}:${col}`).format.columnWidthPx = width;
+for (let i=1;i<rows.length;i+=2) sheet.getRange(`A${i+5}:G${i+5}`).format.fill = '#F8F4EF';
+for (let i=0;i<6;i++) sheet.getRange(`A${i+5}:G${i+5}`).format.fill = '#FFF3D8';
+sheet.getRange('F5:F10').format.font.bold = true;
+workbook.recalculate();
+const file = await SpreadsheetFile.exportXlsx(workbook);
+await file.save(fileURLToPath(new URL('story_dialogue.xlsx', dir)));
+console.log(JSON.stringify({rows:rows.length,ids:ids.length,lastRow:end}));

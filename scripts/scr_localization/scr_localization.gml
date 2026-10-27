@@ -22,13 +22,8 @@ function lang_toggle() { lang_set(!lang_is_korean()); }
 
 function tr(_en, _ko) { return lang_is_korean() ? _ko : _en; }
 function lang_font_init() {
-    if (!variable_global_exists("ui_pixel_glyph_map")) global.ui_pixel_glyph_map = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~클래식무한공이동위험샷파울제거알수없설정언어국영켜짐꺼완료재개메인뉴기회점최고록간격아템선택보상소유벤토리놓배율새게임오버종플레하세요빈곳다은쿠션마입니나를합테블을릭해으준비전에사용있때각도의승부모드순시작뒤로효과저장실패만워첫옮초역됨멈출습는량음까지０１２３４５６７８９";
-    if (!variable_global_exists("ui_pixel_font") || global.ui_pixel_font == -1)
-        global.ui_pixel_font = font_add_sprite_ext(spr_ui_pixel_font, " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", false, 0);
-    if (!variable_global_exists("ui_pixel_font_ko") || global.ui_pixel_font_ko == -1)
-        global.ui_pixel_font_ko = font_add_sprite_ext(spr_ui_pixel_font_ko, " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~클래식무한공이동위험샷파울제거알수없설정언어국영켜짐꺼완료재개메인뉴기회점최고록간격아템선택보상소유벤토리놓배율새게임오버종플레하세요빈곳다은쿠션마입니나를합테블을릭해으준비전에사용있때각도의승부모드순시작뒤로효과저장실패만워첫옮초역됨멈출습는량음까지０１２３４５６７８９", false, 0);
+    if (!variable_global_exists("ui_pixel_glyph_map")) global.ui_pixel_glyph_map = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~클래식무한공이동위험샷파울제거알수없설정언어국영켜짐꺼완료재개메인뉴기회점최고록간격아템선택보상소유벤토리놓배율새게임오버종플레하세요빈곳다은쿠션마입니나를합테블을릭해으준비전에사용있때각도의승부모드순시작뒤로효과저장실패만워첫옮초역됨멈출습는량음까지０１２３４５６７８９려면스술값내야바텐더서와처얼굴네당구대가판늘깎릴그땐원받죠목표맞히예좋또할라겁쟁들쉼터손님브크치득벽붉적복두번여길것끝숙련누막혹친매먼중않총쌓차례살될절반났느껴질남갈납졌액줄엔안봐팽했자짝너긴혀쳐줘찾닿취날따잡겠진금앞주돌같조건핑계쫓킬골빠듯덜늦집겨돼깔큰방칠근데필둘채우짜붙명답걸추텨잃신력낼르써랑되경노쓰꿀일성확러벌감았좀쓸잘피산틀약줬겼럼읽연쯤말못져갔둔통궁직접람밌짱맘체랐웠됐쉬운틈움쉽잠깐었생훨씬밖슬꿔군셨웃런심렀봤익몇쳤끔올갑듣·↑↓";
 }
-function lang_font() { lang_font_init(); return lang_is_korean() ? global.ui_pixel_font_ko : global.ui_pixel_font; }
 function tr_mode(_mode = undefined) {
     if (is_undefined(_mode)) { game_mode_ensure(); _mode = global.game_mode; }
     return (_mode == GAME_MODE_CLASSIC) ? tr("CLASSIC", "클래식") : tr("ENDLESS", "무한");

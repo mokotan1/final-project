@@ -1,6 +1,8 @@
 /// Pure game-rule state. The best score persists through cushion_foul_void_save.ini.
 /// High-risk item: arms the next shot for exponential cushion scoring.
 
+#macro ENDLESS_SCORE_MAX 999999999
+
 function rules_item_move() { return 1; }
 function rules_item_risk_shot() { return 2; }
 function rules_item_remove_foul() { return 3; }
@@ -8,14 +10,18 @@ function rules_item_remove_foul() { return 3; }
 function rules_item_name(_item) {
     switch (_item) {
         case 1: return tr("Move", "공 이동");
-        case 2: return tr("Risk Shot", "위험 샷");
-        case 3: return tr("Remove foul", "파울 제거");
+        case 2: return tr("Risk Shot", "할 수 있다 나라면!!");
+        case 3: return tr("Remove foul", "겁쟁이들의 쉼터");
     }
     return tr("Unknown", "알 수 없음");
 }
 
 function rules_init(_preserve_best = true) {
     game_mode_ensure();
+    // Normal game rooms must clear story-only state before obj_cue starts
+    // reading turn state. This also makes returning from STORY deterministic.
+    global.story_versus_active = false;
+    global.story_match_over = false;
     var _best = game_mode_load_best_score();
     if (_preserve_best && variable_global_exists("best_score")) {
         _best = global.best_score;
@@ -78,6 +84,7 @@ function rules_next_goal() {
 }
 
 function rules_on_shot_started(_player_ball) {
+    if (story_versus_active()) return story_versus_on_shot_started(_player_ball);
     if (global.game_over || global.shot_active || global.place_mode || global.pending_reward_choice || global.reward_choice_open) return false;
 
     global.shot_active = true;
@@ -97,6 +104,7 @@ function rules_on_shot_started(_player_ball) {
 }
 
 function rules_on_cushion_hit(_player_ball, _cushion_count) {
+    if (story_versus_active()) return story_versus_on_cushion_hit(_player_ball, _cushion_count);
     if (!global.shot_active || global.game_over) return false;
     if (global.shot_scored || global.shot_penalized) return false;
     if (_cushion_count <= global.shot_cushion_count) return false;
@@ -115,6 +123,7 @@ function rules_on_cushion_hit(_player_ball, _cushion_count) {
 }
 
 function rules_on_target_hit(_player_ball, _target_ball, _cushion_count) {
+    if (story_versus_active()) return story_versus_on_target_hit(_player_ball, _target_ball, _cushion_count);
     if (!global.shot_active || global.game_over || global.shot_scored) return false;
 
     global.shot_cushion_count = max(global.shot_cushion_count, _cushion_count);
@@ -127,13 +136,20 @@ function rules_on_target_hit(_player_ball, _target_ball, _cushion_count) {
             ? 100 * power(10, global.shot_cushion_count)
             : 100 * power(2, global.shot_cushion_count));
     if (!global.shot_penalized) {
-        global.shot_pending_points = _gain;
-        if (_gain >= 1000) {
-            var _extra_life = min(180, round(45 * log10(_gain / 1000)));
+        // Keep the scoring formula intact. Only the endless credit is bounded;
+        // pending/HUD/payout feedback must match the amount that can be banked.
+        var _credited_gain = _gain;
+        game_mode_ensure();
+        if (global.game_mode == GAME_MODE_ENDLESS) {
+            _credited_gain = min(_gain, max(0, ENDLESS_SCORE_MAX - global.score));
+        }
+        global.shot_pending_points = _credited_gain;
+        if (_credited_gain >= 1000) {
+            var _extra_life = min(180, round(45 * log10(_credited_gain / 1000)));
             global.score_gain_fx = {
                 active: true,
                 from: global.score,
-                gain: _gain,
+                gain: _credited_gain,
                 age: 0,
                 life: 150 + _extra_life
             };
@@ -141,7 +157,7 @@ function rules_on_target_hit(_player_ball, _target_ball, _cushion_count) {
         array_push(global.payout_fx, {
             x: _target_ball.x,
             y: _target_ball.y,
-            points: _gain,
+            points: _credited_gain,
             multiplier: global.risk_shot_active ? power(10, global.shot_cushion_count) : power(2, global.shot_cushion_count),
             age: 0,
             // Keep the earned-points callout readable for the same hold/fade
@@ -153,6 +169,7 @@ function rules_on_target_hit(_player_ball, _target_ball, _cushion_count) {
 }
 
 function rules_on_foul_hit(_player_ball, _foul_ball) {
+    if (story_versus_active()) return story_versus_on_foul_hit(_player_ball, _foul_ball);
     if (!global.shot_active || global.game_over) return false;
     if (global.shot_penalized || global.shot_last_foul == _foul_ball) return false;
 
@@ -184,7 +201,12 @@ function rules_on_shot_ended() {
     if (!global.shot_active) return false;
 
     if (global.shot_scored && !global.shot_penalized) {
-        global.score += global.shot_pending_points;
+        game_mode_ensure();
+        if (global.game_mode == GAME_MODE_ENDLESS) {
+            global.score = min(ENDLESS_SCORE_MAX, global.score + global.shot_pending_points);
+        } else {
+            global.score += global.shot_pending_points;
+        }
         global.zero_cushion_streak = (global.shot_cushion_count == 0) ? global.zero_cushion_streak + 1 : 0;
         global.chances = 3;
         if (global.score > global.best_score) {

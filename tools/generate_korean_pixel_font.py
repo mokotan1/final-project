@@ -26,7 +26,8 @@ glyph_manifest = ROOT / "tools" / "korean_glyphs.txt"
 previous_chars = glyph_manifest.read_text(encoding="utf-8").rstrip("\r\n") if glyph_manifest.exists() else ""
 # Preserve existing frame indices while adding syllables introduced by new UI.
 score_digits = "０１２３４５６７８９"
-chars = "".join(dict.fromkeys(previous_chars + ascii_chars + korean + score_digits))
+ui_symbols = "·↑↓"
+chars = "".join(dict.fromkeys(previous_chars + ascii_chars + korean + score_digits + ui_symbols))
 if not chars.startswith(ascii_chars):
     raise ValueError("The font manifest must begin with the 95 ASCII glyphs")
 font = ImageFont.truetype(r"C:\Windows\Fonts\malgun.ttf", 11)
@@ -93,19 +94,8 @@ yy = yy.replace(',,"volume"', ',"volume"')
 yy = yy.replace('"visibleRange":null,"volume":1.0,"xorigin":0,"yorigin":0,"volume":1.0,"xorigin":0,"yorigin":0,}', '"visibleRange":null,"volume":1.0,"xorigin":0,"yorigin":0,}')
 (OUT / "spr_ui_pixel_font_ko.yy").write_text(yy, encoding="utf-8")
 (ROOT / "tools" / "korean_glyphs.txt").write_text(chars, encoding="utf-8")
-# Keep the runtime sprite-font map in exactly the same frame order.
 localization = ROOT / "scripts" / "scr_localization" / "scr_localization.gml"
 lines = localization.read_text(encoding="utf-8").splitlines(keepends=True)
-for index, line in enumerate(lines):
-    if "global.ui_pixel_font_ko = font_add_sprite_ext" in line:
-        prefix, marker, tail = line.partition("}~")
-        if not marker or '", false, 0);' not in tail:
-            raise ValueError("Korean sprite-font map was not found")
-        suffix = tail.split('", false, 0);', 1)[1]
-        lines[index] = prefix + marker + chars[len(ascii_chars):] + '", false, 0);' + suffix
-        break
-else:
-    raise ValueError("Korean sprite-font declaration was not found")
 glyph_map_literal = chars.replace("\\", "\\\\").replace('"', '\\"')
 for index, line in enumerate(lines):
     if 'global.ui_pixel_glyph_map = ' in line:

@@ -1,113 +1,58 @@
-/// Draw glyph cells from a single texture so every character uses one sprite frame.
+/// Galmuri11 is rasterized at the requested draw size, avoiding scaled 12x14 sprite crops.
+function ui_galmuri_font(_size, _bold = false, _base_px = 11) {
+    if (!variable_global_exists("galmuri_font_cache")) global.galmuri_font_cache = ds_map_create();
+    var _px = max(8, round(_base_px * _size));
+    var _key = string(_px) + (_bold ? "b" : "r");
+    if (!ds_map_exists(global.galmuri_font_cache, _key)) {
+        var _file = _bold ? "Galmuri11-Bold.ttf" : "Galmuri11.ttf";
+        var _font = font_add(_file, _px, false, false, 32, 126);
+        global.galmuri_font_cache[? _key] = _font;
+    }
+    return global.galmuri_font_cache[? _key];
+}
+
 function pixel_draw_text(_x, _y, _text, _bold = false) {
     pixel_draw_text_transformed(_x, _y, _text, 1, 1, 0, _bold);
 }
 
 function pixel_text_width(_text) {
-    var _value = string(_text);
-    var _width = 0;
-    for (var _i = 1; _i <= string_length(_value); _i++) {
-        _width += ord(string_char_at(_value, _i)) > 127 ? 12 : 8;
-    }
+    var _old = draw_get_font();
+    var _font = ui_galmuri_font(1);
+    if (_font == -1) return string_length(string(_text)) * 12;
+    draw_set_font(_font);
+    var _width = string_width(string(_text));
+    draw_set_font(_old);
     return _width;
 }
 
-/// Use the Hangul atlas design for score digits on Korean screens.
 function pixel_score_text(_score) {
-    var _value = string(_score);
-    if (!lang_is_korean()) return _value;
-    var _digits = "０１２３４５６７８９";
-    var _out = "";
-    for (var _i = 1; _i <= string_length(_value); _i++) {
-        var _char = string_char_at(_value, _i);
-        var _digit = ord(_char) - ord("0");
-        _out += (_digit >= 0 && _digit <= 9) ? string_char_at(_digits, _digit + 1) : _char;
-    }
-    return _out;
+    return string(_score);
 }
 
-function pixel_draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle, _bold = false) {
-    if (_angle != 0) {
-        draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle);
-        return;
-    }
-    if (!variable_global_exists("ui_pixel_glyph_map")) lang_font_init();
-    var _map = global.ui_pixel_glyph_map;
-    var _value = string(_text);
-    var _length = string_length(_value);
-    var _sx = max(1, round(_xscale));
-    var _sy = max(1, round(_yscale));
-    var _width = pixel_text_width(_value) * _sx;
-    var _height = 14 * _sy;
-    var _draw_x = _x;
-    var _draw_y = _y;
-    var _halign = draw_get_halign();
-    var _valign = draw_get_valign();
-    if (_halign == fa_center) _draw_x -= _width * 0.5;
-    else if (_halign == fa_right) _draw_x -= _width;
-    if (_valign == fa_middle) _draw_y -= _height * 0.5;
-    else if (_valign == fa_bottom) _draw_y -= _height;
-    _draw_x = round(_draw_x);
-    _draw_y = round(_draw_y);
-    var _color = draw_get_color();
-    var _alpha = draw_get_alpha();
-    var _cursor_x = _draw_x;
-    for (var _i = 1; _i <= _length; _i++) {
-        var _char = string_char_at(_value, _i);
-        var _advance = (ord(_char) > 127 ? 12 : 8) * _sx;
-        if (_char != " ") {
-            var _frame = string_pos(_char, _map) - 1;
-            if (_frame >= 0) {
-                var _source_x = (_frame mod 16) * 16 + 2;
-                var _source_y = (_frame div 16) * 18 + 2;
-                draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
-                    _cursor_x, _draw_y, _sx, _sy, _color, _alpha);
-                if (_bold) draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
-                    _cursor_x + max(1, _sx div 2), _draw_y, _sx, _sy, _color, _alpha);
-            }
-        }
-        _cursor_x += _advance;
+function pixel_draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle, _bold = false, _base_px = 11) {
+    var _old = draw_get_font();
+    var _size = max(1, max(_xscale, _yscale));
+    var _font = ui_galmuri_font(_size, _bold, _base_px);
+    if (_font != -1) {
+        draw_set_font(_font);
+        draw_text_transformed(_x, _y, string(_text), _xscale / _size, _yscale / _size, _angle);
+        draw_set_font(_old);
     }
 }
 
-/// Compact lettering for large menu labels; other HUD text keeps its spacing.
-function pixel_draw_menu_text(_x, _y, _text, _scale, _bold = false) {
-    if (!variable_global_exists("ui_pixel_glyph_map")) lang_font_init();
-    var _map = global.ui_pixel_glyph_map;
-    var _value = string(_text);
-    var _length = string_length(_value);
-    var _size = max(1, round(_scale));
-    var _width = 0;
-    for (var _i = 1; _i <= _length; _i++) {
-        var _char = string_char_at(_value, _i);
-        var _advance = 6;
-        if (ord(_char) > 127) _advance = 12;
-        else if (_char == "I") _advance = 2;
-        else if (_char == " ") _advance = 4;
-        _width += _advance * _size;
-    }
-    var _cursor_x = round(_x - _width * 0.5);
-    var _draw_y = round(_y - 7 * _size);
-    var _color = draw_get_color();
-    var _alpha = draw_get_alpha();
-    for (var _i = 1; _i <= _length; _i++) {
-        var _char = string_char_at(_value, _i);
-        if (_char != " ") {
-            var _frame = string_pos(_char, _map) - 1;
-            if (_frame >= 0) {
-                var _source_x = (_frame mod 16) * 16 + 2;
-                var _source_y = (_frame div 16) * 18 + 2;
-                draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
-                    _cursor_x, _draw_y, _size, _size, _color, _alpha);
-                if (_bold) draw_sprite_part_ext(spr_ui_glyph_atlas, 0, _source_x, _source_y, 12, 14,
-                    _cursor_x + 1, _draw_y, _size, _size, _color, _alpha);
-            }
-        }
-        var _advance = 6;
-        if (ord(_char) > 127) _advance = 12;
-        else if (_char == "I") _advance = 2;
-        else if (_char == " ") _advance = 4;
-        _cursor_x += _advance * _size;
+function pixel_draw_menu_text(_x, _y, _text, _scale, _bold = false, _latin_advance = 6, _base_px = 12) {
+    var _old = draw_get_font();
+    var _font = ui_galmuri_font(_scale, _bold, _base_px);
+    if (_font != -1) {
+        draw_set_font(_font);
+        var _old_halign = draw_get_halign();
+        var _old_valign = draw_get_valign();
+        draw_set_halign(fa_center);
+        draw_set_valign(fa_middle);
+        draw_text(_x, _y, string(_text));
+        draw_set_halign(_old_halign);
+        draw_set_valign(_old_valign);
+        draw_set_font(_old);
     }
 }
 

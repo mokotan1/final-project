@@ -2,7 +2,7 @@
   "$GMSprite":"v2",
   "%Name":"spr_ui_glyph_atlas",
   "bboxMode":0,
-  "bbox_bottom":269,
+  "bbox_bottom":521,
   "bbox_left":0,
   "bbox_right":255,
   "bbox_top":0,
@@ -16,7 +16,7 @@
   ],
   "gridX":0,
   "gridY":0,
-  "height":270,
+  "height":522,
   "HTile":false,
   "layers":[
     {"$GMImageLayer":"","%Name":"7d510a71-0002-4a11-8999-000000000002","blendMode":0,"displayName":"default","isLocked":false,"name":"7d510a71-0002-4a11-8999-000000000002","opacity":100.0,"resourceType":"GMImageLayer","resourceVersion":"2.0","visible":true,},

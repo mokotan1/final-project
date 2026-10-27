@@ -7,7 +7,27 @@ var _brass = make_color_rgb(211, 169, 78);
 var _cream = make_color_rgb(236, 231, 204);
 var _muted = make_color_rgb(164, 188, 173);
 var _panel = make_color_rgb(16, 79, 58);
-draw_set_font(-1); draw_set_halign(fa_center); draw_set_valign(fa_middle); draw_set_alpha(1);
+lang_font_init(); draw_set_halign(fa_center); draw_set_valign(fa_middle); draw_set_alpha(1);
+if (menu_story_opening) {
+    draw_set_color(c_white);
+    draw_sprite(spr_story_opening, 0, 0, 0);
+    draw_set_alpha(0.75);
+    draw_set_color(c_black);
+    draw_rectangle(18, 660, 410, 708, false);
+    draw_set_alpha(1);
+    draw_set_color(_cream);
+    pixel_draw_text_transformed(32, 676,
+        tr("ENTER / CLICK: START   ESC: BACK", "클릭 / ENTER: 시작   ESC: 뒤로"), 1, 1, 0, false);
+    var _prompt_alpha = 0.15 + 0.85 * (0.5 + 0.5 * sin(get_timer() * 0.000006));
+    draw_set_alpha(_prompt_alpha);
+    draw_set_color(c_black);
+    pixel_draw_text_transformed(_cx + 2, 674, tr("PRESS ENTER TO START", "시작하려면 클릭하세요"), 2, 2, 0, true);
+    draw_set_color(_cream);
+    pixel_draw_text_transformed(_cx, 672, tr("PRESS ENTER TO START", "시작하려면 클릭하세요"), 2, 2, 0, true);
+    draw_set_alpha(1);
+    draw_set_color(c_white);
+    exit;
+}
 draw_sprite(spr_menu_background, 0, 0, 0);
 
 // Independent light layers keep the skyline calm while the bar sign sputters.
@@ -28,7 +48,6 @@ draw_sprite_ext(spr_menu_neon_glow, 0, 0, 0, 1, 1, 0, c_white, _neon_a);
 
 if (menu_view == 0) {
     var _menu_x = 500;
-    draw_set_font(lang_font());
     draw_set_color(c_black);
     pixel_draw_menu_text(_menu_x + 3, 118, "CUSHION", 5, true);
     draw_set_color(_cream);
@@ -57,47 +76,58 @@ if (menu_view == 0) {
 }
 
 if (menu_view == 1) {
-    if (menu_selected_mode == GAME_MODE_ENDLESS) draw_sprite(spr_mode_endless, 0, 0, 0); else draw_sprite(spr_mode_classic, 0, 0, 0);
-    if (menu_hover_endless) { draw_set_color(_brass); draw_rectangle(750, 165, 1145, 265, true); }
-    if (menu_hover_classic) { draw_set_color(_brass); draw_rectangle(750, 345, 1145, 445, true); }
-    if (menu_hover_start) { draw_set_color(_brass); draw_rectangle(195, 578, 445, 632, true); }
-    // The sprite contains English copy in the info area. Redraw that area in
-    // either language so headings and score share one font and baseline grid.
-    draw_set_font(lang_font());
+    draw_sprite(spr_mode_select_bg, 0, 0, 0);
+    var _idle_frame = 0;
+    if (menu_idle_tick >= 60) _idle_frame = 1;
+    if (menu_idle_tick >= 65) _idle_frame = 2;
+    draw_sprite_ext(spr_assistant_bar_idle, _idle_frame, 300, 500, 0.8, 0.8, 0, c_white, 1);
+    if (menu_talk_tick >= 0) {
+        var _talk_pose = [2, 3, 2, 4, 2, 5];
+        var _talk_frame = _talk_pose[min(5, floor(menu_talk_tick / 12))];
+        draw_sprite_part_ext(spr_assistant_desk_talk, _talk_frame,
+            238, 208, 32, 27, 300 + (238 - 256) * 0.8 + 2,
+            500 + (208 - 512) * 0.8 + 4, 0.8, 0.8, c_white, 1);
+    }
+    draw_sprite_part(spr_mode_select_bg, 0, 0, 500, 700, 220, 0, 500);
     var _endless_selected = (menu_selected_mode == GAME_MODE_ENDLESS);
-    draw_set_color(make_color_rgb(68, 40, 27));
-    draw_rectangle(108, 374, 558, 568, false);
-    draw_set_color(make_color_rgb(210, 214, 194));
-    draw_rectangle(112, 378, 554, 564, false);
-    draw_set_color(_charcoal);
-    pixel_draw_text_transformed(332, 397, tr("SELECTED MODE", "선택한 모드"), 2, 2, 0, true);
-    draw_set_color(make_color_rgb(68, 40, 27));
-    pixel_draw_text_transformed(332, 438, tr_mode(menu_selected_mode), 3, 3, 0, true);
-    draw_set_color(_charcoal);
-    pixel_draw_text_transformed(332, 477, _endless_selected ? tr("ITEMS / MILESTONES", "아이템과 보상") : tr("PURE SHOT / FOUL CAP 4", "순수 샷 / 파울 한도 4"), 2, 2, 0);
-    pixel_draw_text_transformed(332, 509, tr("BEST SCORE", "최고 기록"), 2, 2, 0, true);
-    draw_set_color(make_color_rgb(68, 40, 27));
-    pixel_draw_text_transformed(332, 546, pixel_score_text(_endless_selected ? menu_best_endless : menu_best_classic), 2, 2, 0, true);
+    var _story_selected = menu_selected_story;
+    ui_button_draw("STORY", 695, 90, UI_BUTTON_L_W, UI_BUTTON_L_H, true,
+        ui_button_is_pressed(id, "story") ? UI_BUTTON_PRESSED : (_story_selected ? UI_BUTTON_SELECTED : ui_button_state(menu_hover_story)));
+    ui_button_draw("ENDLESS", 695, 197, UI_BUTTON_L_W, UI_BUTTON_L_H, true,
+        ui_button_is_pressed(id, "endless") ? UI_BUTTON_PRESSED : ((!_story_selected && _endless_selected) ? UI_BUTTON_SELECTED : ui_button_state(menu_hover_endless)));
+    ui_button_draw("CLASSIC", 695, 304, UI_BUTTON_L_W, UI_BUTTON_L_H, true,
+        ui_button_is_pressed(id, "classic") ? UI_BUTTON_PRESSED : ((!_story_selected && !_endless_selected) ? UI_BUTTON_SELECTED : ui_button_state(menu_hover_classic)));
+    draw_set_color(c_black);
+    draw_triangle(600, 551, 647, 514, 647, 560, false);
+    draw_rectangle(632, 411, 1242, 563, false);
+    draw_set_color(_brass);
+    draw_triangle(607, 548, 643, 521, 643, 554, false);
+    draw_rectangle(636, 407, 1236, 557, false);
+    draw_set_color(make_color_rgb(5, 48, 45));
+    draw_triangle(620, 544, 651, 528, 651, 548, false);
+    draw_rectangle(643, 414, 1229, 550, false);
+    draw_set_color(make_color_rgb(25, 113, 93));
+    draw_rectangle(654, 424, 1218, 428, false);
+    draw_set_color(_brass);
+    pixel_draw_text_transformed(940, 454,
+        _story_selected ? tr("STORY", "스토리") : (_endless_selected ? tr("ENDLESS", "무한") : tr("CLASSIC", "클래식")),
+        2, 2, 0, true);
+    draw_set_color(_cream);
+    pixel_draw_text_transformed(940, 495,
+        _story_selected ? tr("A bar bet starts the story.", "술값 내기로 이야기를 시작해요.")
+        : (_endless_selected ? tr("Collect items. Chase your best.", "아이템을 모아 최고 기록에 도전해요.")
+        : tr("Four fouls. Every shot counts.", "순수한 샷. 파울 한도 4.")),
+        2, 2, 0, false);
+    draw_set_color(_muted);
+    pixel_draw_text_transformed(1090, 540, tr("ESC: MENU", "ESC: 메뉴"), 1, 1, 0, false);
+    ui_button_draw("BACK", 20, 590, UI_BUTTON_M_W, UI_BUTTON_M_H, true,
+        ui_button_state(menu_hover_back, ui_button_is_pressed(id, "back")));
+    ui_button_draw("START", 780, 590, UI_BUTTON_M_W, UI_BUTTON_M_H, true,
+        ui_button_state(menu_hover_start, ui_button_is_pressed(id, "start")));
 }
 
 if (menu_settings_open) {
     if (global.audio_enabled) draw_sprite(spr_menu_settings_on, 0, 0, 0); else draw_sprite(spr_menu_settings_off, 0, 0, 0);
-    draw_set_font(lang_font()); draw_set_halign(fa_center); draw_set_valign(fa_middle);
-    // Shared, high contrast settings controls. Coordinates mirror obj_ui so
-    // opening settings from either context feels identical.
-    draw_set_color(_panel); draw_rectangle(_cx - 290, 145, _cx + 290, 605, false);
-    draw_set_color(_brass); draw_rectangle(_cx - 278, 157, _cx + 278, 593, true);
-    draw_set_color(_brass); pixel_draw_text_transformed(_cx, 218, tr("SETTINGS", "설정"), 2, 2, 0, true);
-    draw_set_color(_muted); pixel_draw_text_transformed(_cx, 274, tr("SOUND", "음량"), 2, 2, 0, true);
-    var _volume = audio_volume_get();
-    var _bar_l = _cx - 240; var _bar_r = _cx + 240;
-    draw_set_color(make_color_rgb(39, 47, 43)); draw_rectangle(_bar_l, 320, _bar_r, 344, false);
-    draw_set_color(_brass); draw_rectangle(_bar_l, 320, _bar_l + (_bar_r - _bar_l) * _volume, 344, false);
-    draw_set_color(_cream); draw_rectangle(_bar_l + (_bar_r - _bar_l) * _volume - 8, 312, _bar_l + (_bar_r - _bar_l) * _volume + 8, 352, false);
-    draw_set_color(_brass); pixel_draw_text_transformed(_cx, 378, string(round(_volume * 100)) + "%", 2, 2, 0, true);
-    draw_set_color(_muted); pixel_draw_text_transformed(_cx, 410, tr("LANGUAGE", "언어"), 2, 2, 0, true);
-    draw_set_color(_brass); pixel_draw_text_transformed(_cx, 452, lang_is_korean() ? "한국어" : "ENGLISH", 3, 3, 0, true);
-    draw_set_color(make_color_rgb(68, 40, 27)); draw_rectangle(_cx - 120, 478, _cx + 120, 532, false);
-    draw_set_color(_cream); pixel_draw_text_transformed(_cx, 505, "DONE", 2, 2, 0, true);
+    ui_settings_panel_draw(_cx, "DONE", ui_button_state(menu_hover_settings_done, ui_button_is_pressed(id, "done")));
 }
 draw_set_alpha(1); draw_set_color(c_white);

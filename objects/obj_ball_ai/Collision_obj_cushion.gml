@@ -1,0 +1,1 @@
+physics_resolve_cushion_collision(other);
