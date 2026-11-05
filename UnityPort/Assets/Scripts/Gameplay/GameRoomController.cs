@@ -222,11 +222,13 @@ namespace CushionChallenge.Gameplay
                         _targetBall = SpawnBall("TargetBall", targetBallSprite, spawn.Role, spawn.Position);
                         break;
                     case BallRole.Foul:
-                        _foulBalls.Add(SpawnBall($"FoulBall{foulIndex++}", foulBallSprite, spawn.Role, spawn.Position));
+                        _foulBalls.Add(SpawnBall(ResolveFoulBallName(foulIndex), foulBallSprite, spawn.Role, spawn.Position));
+                        foulIndex++;
                         break;
                 }
             }
 
+            DeactivateUnusedSceneFoulPlaceholders();
             WireBallEvents();
             SyncStoryFoulCount();
         }
@@ -251,23 +253,76 @@ namespace CushionChallenge.Gameplay
                         _targetBall = SpawnBall("TargetBall", targetBallSprite, spawn.Role, spawn.Position);
                         break;
                     case BallRole.Foul:
-                        _foulBalls.Add(SpawnBall($"FoulBall{foulIndex++}", foulBallSprite, spawn.Role, spawn.Position));
+                        _foulBalls.Add(SpawnBall(ResolveFoulBallName(foulIndex), foulBallSprite, spawn.Role, spawn.Position));
+                        foulIndex++;
                         break;
                 }
             }
 
+            DeactivateUnusedSceneFoulPlaceholders();
             WireBallEvents();
+        }
+
+        static string ResolveFoulBallName(int foulIndex)
+        {
+            return foulIndex switch
+            {
+                0 => "FoulBallA",
+                1 => "FoulBallB",
+                _ => $"FoulBall{foulIndex}"
+            };
         }
 
         void ClearRuntimeBalls()
         {
             foreach (var foul in _foulBalls)
             {
-                if (foul != null)
+                if (foul == null)
+                    continue;
+                if (IsSceneFoulPlaceholder(foul.name))
+                    foul.gameObject.SetActive(false);
+                else
                     Destroy(foul.gameObject);
             }
 
             _foulBalls.Clear();
+
+            for (var i = 0; i < 16; i++)
+            {
+                var indexed = transform.Find($"FoulBall{i}");
+                if (indexed != null)
+                    Destroy(indexed.gameObject);
+            }
+
+            for (var i = 0; i < 16; i++)
+            {
+                var spawned = transform.Find($"FoulBall_{i}");
+                if (spawned != null)
+                    Destroy(spawned.gameObject);
+            }
+
+            foreach (var legacyName in new[] { "FoulBallA", "FoulBallB" })
+            {
+                var legacy = transform.Find(legacyName);
+                if (legacy != null)
+                    legacy.gameObject.SetActive(false);
+            }
+        }
+
+        static bool IsSceneFoulPlaceholder(string ballName) =>
+            ballName == "FoulBallA" || ballName == "FoulBallB";
+
+        void DeactivateUnusedSceneFoulPlaceholders()
+        {
+            foreach (var legacyName in new[] { "FoulBallA", "FoulBallB" })
+            {
+                var legacy = transform.Find(legacyName);
+                if (legacy == null || !legacy.gameObject.activeSelf)
+                    continue;
+                if (_foulBalls.Any(f => f != null && f.transform == legacy))
+                    continue;
+                legacy.gameObject.SetActive(false);
+            }
         }
 
         void WireBallEvents()
@@ -314,16 +369,24 @@ namespace CushionChallenge.Gameplay
                 go.transform.SetParent(transform, false);
                 go.transform.position = pos;
             }
-            var sr = go.GetComponent<SpriteRenderer>() ?? go.AddComponent<SpriteRenderer>();
+
+            if (!go.TryGetComponent(out SpriteRenderer sr))
+                sr = go.AddComponent<SpriteRenderer>();
+            sr.enabled = true;
             sr.sprite = sprite;
             if (_gameplayMaterial != null) sr.sharedMaterial = _gameplayMaterial;
             sr.sortingOrder = 1;
-            (go.GetComponent<GameMakerBallVisual>() ?? go.AddComponent<GameMakerBallVisual>()).Configure(sr);
-            var motor = go.GetComponent<BilliardBallMotor>() ?? go.AddComponent<BilliardBallMotor>();
-            var view = go.GetComponent<BilliardBallView>() ?? go.AddComponent<BilliardBallView>();
+
+            if (!go.TryGetComponent(out GameMakerBallVisual ballVisual))
+                ballVisual = go.AddComponent<GameMakerBallVisual>();
+            ballVisual.Configure(sr);
+
+            if (!go.TryGetComponent(out BilliardBallMotor motor))
+                motor = go.AddComponent<BilliardBallMotor>();
+            if (!go.TryGetComponent(out BilliardBallView view))
+                view = go.AddComponent<BilliardBallView>();
             view.Role = role;
-            var rb = go.GetComponent<Rigidbody2D>();
-            if (rb == null)
+            if (!go.TryGetComponent(out Rigidbody2D rb))
                 rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Kinematic;
             return view;

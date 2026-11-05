@@ -20,7 +20,7 @@ namespace CushionChallenge.Tests
             Assert.That(CountRole(layout, BallRole.Target), Is.EqualTo(1));
             Assert.That(CountRole(layout, BallRole.Foul), Is.EqualTo(2));
             foreach (var spawn in layout)
-                Assert.IsTrue(CushionChallenge.Core.GameConstants.PlayableContains(spawn.Position));
+                Assert.IsTrue(GameConstants.PlayableContains(spawn.Position));
         }
 
         static int CountRole(IReadOnlyList<ApplicationBallSpawner.SpawnRequest> layout, BallRole role)

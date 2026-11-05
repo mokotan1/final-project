@@ -28,8 +28,7 @@ namespace CushionChallenge.Gameplay
                 child.SetParent(transform, false);
             }
 
-            var renderer = child.GetComponent<SpriteRenderer>();
-            if (renderer == null)
+            if (!child.TryGetComponent(out SpriteRenderer renderer))
                 renderer = child.gameObject.AddComponent<SpriteRenderer>();
             renderer.sprite = source.sprite;
             renderer.sharedMaterial = source.sharedMaterial;

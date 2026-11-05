@@ -52,3 +52,9 @@ Source of truth: GameMaker project at repo root (`objects/`, `scripts/`, `rooms/
 - UI: `GameMakerGameplayHud.cs`
 - Editor: `PortReferencedSpriteImport.cs`
 - Tests: spawn/layout/coordinate/play mode initialization
+
+## Fix (2026-11-05): GamePlay ball spawn + EditMode compile
+
+- **Spawn:** `SpawnBall` now uses `TryGetComponent` before adding `SpriteRenderer` (avoids Unity “fake null” `GetComponent` on stripped renderers that skipped `?? AddComponent` and threw `MissingComponentException` on `FoulBall0`). Reuses scene placeholders `FoulBallA`/`FoulBallB`; cleans indexed runtime fouls; deactivates unused placeholders.
+- **Tests:** `ApplicationBallSpawnerTests` references `GameConstants` via `CushionChallenge.Core` (EditMode asmdef already references `CushionChallenge`).
+- **Verified:** `unity command test run` — `ApplicationBallSpawnerTests` (EditMode), `GamePlaySceneInitializationTests` (PlayMode async, 3/3 passed); play-mode eval `active fouls ok` on GamePlay endless spawn.
