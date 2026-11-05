@@ -13,6 +13,12 @@ namespace CushionChallenge.Gameplay
 
         public bool WantsShoot { get; private set; }
 
+        public bool TryGetPowerNormalized(out float normalized)
+        {
+            normalized = MaxPower <= 0f ? 0f : Mathf.Clamp01(_charge / MaxPower);
+            return _player != null;
+        }
+
         public void Bind(BilliardBallView player)
         {
             _player = player;

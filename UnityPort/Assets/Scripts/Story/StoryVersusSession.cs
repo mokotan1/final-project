@@ -24,6 +24,7 @@ namespace CushionChallenge.Story
         public bool Active { get; private set; }
         public bool FiftyRoundMatch { get; private set; } = true;
         public bool IntroMatch { get; set; } = true;
+        public bool BreakAssignDialoguePending { get; set; }
         public bool BreakPending { get; set; }
         public bool BreakFollowupAiPending { get; set; }
         public StoryTurnSide BreakBreaker { get; set; } = StoryTurnSide.Player;
@@ -89,6 +90,7 @@ namespace CushionChallenge.Story
             AiScore = 0;
             CompletedPairs = 0;
             BreakPending = true;
+            BreakAssignDialoguePending = IntroMatch;
             BreakFollowupAiPending = false;
             ShotIsBreak = false;
             CurrentTurn = StoryTurnSide.Player;
@@ -111,8 +113,23 @@ namespace CushionChallenge.Story
             CurrentTurn = breaker;
         }
 
+        /// <summary>scr_story_versus_roll_break_breaker — current GMS source always assigns AI for 50-round intro.</summary>
         public StoryTurnSide RollBreakBreaker() =>
-            UnityEngine.Random.value < 0.5f ? StoryTurnSide.Player : StoryTurnSide.Ai;
+            IntroMatch ? StoryTurnSide.Ai : StoryTurnSide.Ai;
+
+        public bool TryShowBreakAssignDialogue()
+        {
+            if (!IntroMatch || !BreakAssignDialoguePending)
+                return false;
+            BreakAssignDialoguePending = false;
+            var playerBreaks = BreakBreaker == StoryTurnSide.Player;
+            Dialogue.ShowMain(
+                "BREAK-ASSIGN",
+                "Bartender",
+                playerBreaks ? "손님이 브레이크를 치습니다." : "바텐더가 브레이크를 치습니다.",
+                2f);
+            return true;
+        }
 
         public void Tick(float deltaSeconds)
         {
@@ -136,7 +153,8 @@ namespace CushionChallenge.Story
         }
 
         public bool InputLocked() =>
-            MatchOver || TurnBannerPending;
+            MatchOver || TurnBannerPending
+            || StoryVersusBreakRules.InputLockedByBreakAssign(FiftyRoundMatch && IntroMatch, BreakAssignDialoguePending);
 
         public bool IsHumanTurn() =>
             Active && !MatchOver && CurrentTurn == StoryTurnSide.Player
@@ -194,7 +212,7 @@ namespace CushionChallenge.Story
         {
             if (!ShotActive || MatchOver || ShotPenalized)
                 return;
-            if (BreakPending && ShotIsBreak)
+            if (StoryVersusBreakRules.BreakFoulRulesSuppressed(FiftyRoundMatch && IntroMatch, ShotIsBreak))
                 return;
             ShotPenalized = true;
             ShotPendingPoints = 0;

@@ -19,6 +19,8 @@ namespace CushionChallenge.Gameplay
         [SerializeField] Sprite foulBallSprite;
 
         public GameModeKind Mode { get; private set; } = GameModeKind.Endless;
+        public StoryVersusSession StorySession => _story;
+        public EndlessRulesEngine EndlessRules => _rules;
         EndlessRulesEngine _rules = new();
         StoryVersusSession _story = new();
         readonly List<BilliardBallView> _foulBalls = new();
@@ -83,12 +85,25 @@ namespace CushionChallenge.Gameplay
                 var breaker = _story.RollBreakBreaker();
                 _story.AssignBreakBreaker(breaker);
                 _story.PlayerScoreAtTurnStart = 0;
-                ShowStoryLine("Bartender", breaker == StoryTurnSide.Player ? "OPN-01" : "OPN-02");
+                ApplyStorySpawnLayout();
                 if (breaker == StoryTurnSide.Ai)
                     ScheduleAiTurn();
             }
+            else
+            {
+                ApplyEndlessSpawnLayout(new System.Random(
+                    SessionRequest.EndlessSpawnSeed != 0
+                        ? SessionRequest.EndlessSpawnSeed
+                        : System.Environment.TickCount));
+            }
 
+            EnsureCueAndDialogue();
+            if (_playerBall != null)
+                _cue.Bind(_playerBall);
+
+            GameMakerGameplayHud.Ensure(this);
             _hud = GameHudPanel.Create(transform);
+            _hud.gameObject.SetActive(false);
             _shop = StoryShopPanel.Create(transform);
             _shop.gameObject.SetActive(_storyMode);
             _result = MatchResultPanel.Create(transform, ReturnToMenu);
@@ -163,16 +178,104 @@ namespace CushionChallenge.Gameplay
             }
 
             TableCushionLayout.EnsureCushions(transform);
+        }
 
-            _playerBall = SpawnBall("PlayerBall", playerBallSprite, BallRole.Player, new Vector2(380, 350));
-            _aiBall = SpawnBall("AiBall", playerBallSprite, BallRole.AiStriker, new Vector2(900, 350));
-            _targetBall = SpawnBall("TargetBall", targetBallSprite, BallRole.Target, new Vector2(640, 260));
-            _foulBalls.Add(SpawnBall("FoulBallA", foulBallSprite, BallRole.Foul, new Vector2(520, 480)));
-            _foulBalls.Add(SpawnBall("FoulBallB", foulBallSprite, BallRole.Foul, new Vector2(760, 480)));
+        void EnsureCueAndDialogue()
+        {
+            var cueTransform = transform.Find("Cue");
+            if (cueTransform != null)
+                _cue = cueTransform.GetComponent<CueAimController>() ?? cueTransform.gameObject.AddComponent<CueAimController>();
+            else
+            {
+                var cueGo = new GameObject("Cue");
+                cueGo.transform.SetParent(transform, false);
+                _cue = cueGo.AddComponent<CueAimController>();
+            }
+
+            var dialogueTransform = transform.Find("StoryDialogue");
+            if (dialogueTransform != null)
+                _dialogue = dialogueTransform.GetComponent<StoryDialoguePanel>() ?? dialogueTransform.gameObject.AddComponent<StoryDialoguePanel>();
+            else
+            {
+                var dialogueGo = new GameObject("StoryDialogue");
+                dialogueGo.transform.SetParent(transform, false);
+                _dialogue = dialogueGo.AddComponent<StoryDialoguePanel>();
+            }
+        }
+
+        void ApplyStorySpawnLayout()
+        {
+            ClearRuntimeBalls();
+            var layout = StoryVersusSpawnLayout.BuildLayout(_story.IntroMatch);
+            var foulIndex = 0;
+            foreach (var spawn in layout)
+            {
+                switch (spawn.Role)
+                {
+                    case BallRole.Player:
+                        _playerBall = SpawnBall("PlayerBall", playerBallSprite, spawn.Role, spawn.Position);
+                        break;
+                    case BallRole.AiStriker:
+                        _aiBall = SpawnBall("AiBall", playerBallSprite, spawn.Role, spawn.Position);
+                        break;
+                    case BallRole.Target:
+                        _targetBall = SpawnBall("TargetBall", targetBallSprite, spawn.Role, spawn.Position);
+                        break;
+                    case BallRole.Foul:
+                        _foulBalls.Add(SpawnBall($"FoulBall{foulIndex++}", foulBallSprite, spawn.Role, spawn.Position));
+                        break;
+                }
+            }
+
+            WireBallEvents();
             SyncStoryFoulCount();
+        }
 
+        void ApplyEndlessSpawnLayout(System.Random rng)
+        {
+            ClearRuntimeBalls();
+            var sceneAi = transform.Find("AiBall");
+            if (sceneAi != null)
+                sceneAi.gameObject.SetActive(false);
+            _aiBall = null;
+            var layout = ApplicationBallSpawner.BuildInitialLayout(_rules.Items.FoulCount, rng);
+            var foulIndex = 0;
+            foreach (var spawn in layout)
+            {
+                switch (spawn.Role)
+                {
+                    case BallRole.Player:
+                        _playerBall = SpawnBall("PlayerBall", playerBallSprite, spawn.Role, spawn.Position);
+                        break;
+                    case BallRole.Target:
+                        _targetBall = SpawnBall("TargetBall", targetBallSprite, spawn.Role, spawn.Position);
+                        break;
+                    case BallRole.Foul:
+                        _foulBalls.Add(SpawnBall($"FoulBall{foulIndex++}", foulBallSprite, spawn.Role, spawn.Position));
+                        break;
+                }
+            }
+
+            WireBallEvents();
+        }
+
+        void ClearRuntimeBalls()
+        {
+            foreach (var foul in _foulBalls)
+            {
+                if (foul != null)
+                    Destroy(foul.gameObject);
+            }
+
+            _foulBalls.Clear();
+        }
+
+        void WireBallEvents()
+        {
             foreach (var view in new[] { _playerBall, _aiBall, _targetBall })
             {
+                if (view == null)
+                    continue;
                 view.Motor.OnCushionContact += motor =>
                 {
                     if (motor.gameObject != Striker.gameObject)
@@ -193,27 +296,6 @@ namespace CushionChallenge.Gameplay
 
             foreach (var view in FindObjectsByType<BilliardBallView>(FindObjectsSortMode.None))
                 view.Motor.OnBallContact += OnBallContact;
-
-            var cueTransform = transform.Find("Cue");
-            if (cueTransform != null)
-                _cue = cueTransform.GetComponent<CueAimController>() ?? cueTransform.gameObject.AddComponent<CueAimController>();
-            else
-            {
-                var cueGo = new GameObject("Cue");
-                cueGo.transform.SetParent(transform, false);
-                _cue = cueGo.AddComponent<CueAimController>();
-            }
-            _cue.Bind(_playerBall);
-
-            var dialogueTransform = transform.Find("StoryDialogue");
-            if (dialogueTransform != null)
-                _dialogue = dialogueTransform.GetComponent<StoryDialoguePanel>() ?? dialogueTransform.gameObject.AddComponent<StoryDialoguePanel>();
-            else
-            {
-                var dialogueGo = new GameObject("StoryDialogue");
-                dialogueGo.transform.SetParent(transform, false);
-                _dialogue = dialogueGo.AddComponent<StoryDialoguePanel>();
-            }
         }
 
         BilliardBallView SpawnBall(string name, Sprite sprite, BallRole role, Vector2 pos)
@@ -223,6 +305,7 @@ namespace CushionChallenge.Gameplay
             if (existing != null)
             {
                 go = existing.gameObject;
+                go.SetActive(true);
                 go.transform.position = pos;
             }
             else
@@ -319,7 +402,10 @@ namespace CushionChallenge.Gameplay
         {
             TickRuleContactLocks();
             if (_storyMode)
+            {
                 _story.Tick(Time.deltaTime);
+                _story.TryShowBreakAssignDialogue();
+            }
             else
                 _rules.Tick(Time.deltaTime);
 
@@ -775,5 +861,7 @@ namespace CushionChallenge.Gameplay
     {
         public static GameModeKind PendingMode = GameModeKind.Endless;
         public static bool StoryIntroMatch;
+        /// <summary>Fixed seed for deterministic endless layout in tests; 0 = random each run.</summary>
+        public static int EndlessSpawnSeed;
     }
 }
