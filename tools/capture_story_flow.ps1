@@ -67,20 +67,7 @@ function Shoot-Player([IntPtr]$Window) {
 }
 
 function Save-ClientFrame([IntPtr]$Window, [string]$Path) {
-    $bitmap = [System.Drawing.Bitmap]::new(1280, 750)
-    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-    try {
-        $dc = $graphics.GetHdc()
-        try { $captured = [StoryFlowWin32]::PrintWindow($Window, $dc, 2) }
-        finally { $graphics.ReleaseHdc($dc) }
-        if (-not $captured) { throw 'PrintWindow failed' }
-        $client = $bitmap.Clone([System.Drawing.Rectangle]::new(0, 30, 1280, 720), $bitmap.PixelFormat)
-        try { $client.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png) }
-        finally { $client.Dispose() }
-    } finally {
-        $graphics.Dispose()
-        $bitmap.Dispose()
-    }
+    $script:lastCaptureMethod = Save-RunnerClientFrame -Window $Window -OutputPath $Path -ClientWidth 1280 -ClientHeight 720 -CaptureMode Auto
 }
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
@@ -89,17 +76,10 @@ New-Item -ItemType Directory -Force -Path $framesDir | Out-Null
 $runner = Get-GamemakerRunnerExe
 $process = Start-GamemakerRunnerProcess -RunnerExe $runner -GameFile $GameFile
 try {
-    $window = [IntPtr]::Zero
-    for ($retry = 0; $retry -lt 80; $retry++) {
-        Start-Sleep -Milliseconds 100
-        $process.Refresh()
-        if ($process.HasExited) { throw "Runner exited before window: $($process.ExitCode)" }
-        $window = $process.MainWindowHandle
-        if ($window -ne [IntPtr]::Zero) { break }
-    }
-    if ($window -eq [IntPtr]::Zero) { throw 'Runner window did not appear' }
+    $window = Wait-GamemakerRunnerGameWindow -Process $process
     $target = Move-RunnerToCaptureMonitor -Window $window -Width 1280 -Height 750 -Margin 20
     Write-Output "Runner on capture monitor: $($target.X),$($target.Y) $($target.Width)x$($target.Height)"
+    Show-RunnerCaptureWindow -Window $window
     Start-Sleep -Milliseconds 700
     if (-not $DirectStory) {
         Save-ClientFrame $window (Join-Path $OutputDirectory 'menu.png')

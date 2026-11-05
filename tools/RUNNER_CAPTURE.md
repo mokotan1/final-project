@@ -34,6 +34,8 @@ JSON 로그:
 
 `ffmpeg`가 PATH에 있어야 mp4가 생성됩니다.
 
+GameMaker Runner 창 클래스는 `YYGameMakerYY`입니다. 캡처 스크립트는 `Process.MainWindowHandle` 대신 이 HWND를 찾습니다. DirectX11 Runner에서는 `PrintWindow`만으로 흰 프레임이 나올 수 있어, 공통 helper는 보조 모니터에서 **BitBlt(`CopyFromScreen`)** 를 먼저 시도합니다. 자세한 진단: [2026-10-29 bartender recovery PRINTWINDOW_DIAGNOSIS](../docs/devlog/2026-10-29-bartender-recovery-on-player-loss/after/PRINTWINDOW_DIAGNOSIS.md).
+
 ## Runner 경로
 
 기본: `C:\ProgramData\GameMakerStudio2-LTS2026\Cache\runtimes\<최신>\windows\x64\Runner.exe`  

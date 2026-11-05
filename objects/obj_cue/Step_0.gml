@@ -40,8 +40,24 @@ var _mouse_dy = mouse_y - _cue_near_y;
 var _cue_along = _mouse_dx * dcos(_cue_angle) - _mouse_dy * dsin(_cue_angle);
 var _cue_across = _mouse_dx * dsin(_cue_angle) + _mouse_dy * dcos(_cue_angle);
 var _cue_hit = _cue_along >= -4 && _cue_along <= 223 && abs(_cue_across) <= 10;
+var _shop_ui = instance_find(obj_ui, 0);
+var _shop_click = false;
+if (story_versus_active() && instance_exists(_shop_ui)) {
+    var _shop_mx = device_mouse_x_to_gui(0);
+    var _shop_my = device_mouse_y_to_gui(0);
+    var _shop_start_x = (display_get_gui_width()
+        - (3 * _shop_ui.ui_slot_size + 2 * _shop_ui.ui_slot_gap)) * 0.5;
+    _shop_click = _shop_mx >= _shop_start_x
+        && _shop_mx <= _shop_start_x + 3 * _shop_ui.ui_slot_size + 2 * _shop_ui.ui_slot_gap
+        && _shop_my >= _shop_ui.ui_inventory_y + 22
+        && _shop_my <= _shop_ui.ui_inventory_y + 22 + _shop_ui.ui_slot_size;
+}
+var _dialogue_click = story_versus_active()
+    && (story_versus_skippable_dialogue_active()
+        || (variable_global_exists("story_dialogue_click_consumed")
+            && global.story_dialogue_click_consumed));
 
-if (mouse_check_button_pressed(mb_left) && _cue_hit) {
+if (mouse_check_button_pressed(mb_left) && _cue_hit && !_shop_click && !_dialogue_click) {
     dragging = true;
 }
 

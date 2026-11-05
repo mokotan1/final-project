@@ -16,8 +16,10 @@ if (menu_story_opening) {
     draw_rectangle(18, 660, 410, 708, false);
     draw_set_alpha(1);
     draw_set_color(_cream);
+    draw_set_halign(fa_left);
     pixel_draw_text_transformed(32, 676,
-        tr("ENTER / CLICK: START   ESC: BACK", "클릭 / ENTER: 시작   ESC: 뒤로"), 1, 1, 0, false);
+        tr("ENTER / CLICK: START", "클릭 / ENTER: 시작"), 1, 1, 0, false);
+    draw_set_halign(fa_center);
     var _prompt_alpha = 0.15 + 0.85 * (0.5 + 0.5 * sin(get_timer() * 0.000006));
     draw_set_alpha(_prompt_alpha);
     draw_set_color(c_black);

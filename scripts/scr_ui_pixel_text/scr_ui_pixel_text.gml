@@ -29,9 +29,10 @@ function pixel_score_text(_score) {
     return string(_score);
 }
 
-function pixel_draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle, _bold = false, _base_px = 11) {
+function pixel_draw_text_transformed(_x, _y, _text, _xscale, _yscale, _angle,
+    _bold = false, _base_px = 11, _fixed_font_scale = 0) {
     var _old = draw_get_font();
-    var _size = max(1, max(_xscale, _yscale));
+    var _size = (_fixed_font_scale > 0) ? _fixed_font_scale : max(1, max(_xscale, _yscale));
     var _font = ui_galmuri_font(_size, _bold, _base_px);
     if (_font != -1) {
         draw_set_font(_font);

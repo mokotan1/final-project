@@ -1,0 +1,12 @@
+{
+  "$GMShader":"",
+  "%Name":"sh_ball_scroll",
+  "name":"sh_ball_scroll",
+  "parent":{
+    "name":"final_project",
+    "path":"final_project.yyp",
+  },
+  "resourceType":"GMShader",
+  "resourceVersion":"2.0",
+  "type":1,
+}

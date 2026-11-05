@@ -17,6 +17,12 @@ if (global.story_stage_clear_pending && !story_versus_is_fifty_round_match()) {
 
 if (global.story_turn_skip_timer > 0) global.story_turn_skip_timer -= 1;
 if (global.story_item_message_timer > 0) global.story_item_message_timer -= 1;
+if (!mouse_check_button(mb_left)) global.story_dialogue_click_consumed = false;
+if (story_versus_skippable_dialogue_active()
+    && (keyboard_check_pressed(vk_enter) || mouse_check_button_pressed(mb_left))) {
+    if (mouse_check_button_pressed(mb_left)) global.story_dialogue_click_consumed = true;
+    story_versus_skip_dialogue();
+}
 if (global.story_dialogue_timer > 0) global.story_dialogue_timer -= 1;
 story_versus_advance_reaction_display();
 story_versus_advance_rule_dialogue();

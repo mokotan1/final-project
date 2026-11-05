@@ -175,6 +175,7 @@
     {"id":{"name":"scr_story_versus","path":"scripts/scr_story_versus/scr_story_versus.yy",},},
     {"id":{"name":"scr_ui_button","path":"scripts/scr_ui_button/scr_ui_button.yy",},},
     {"id":{"name":"scr_ui_pixel_text","path":"scripts/scr_ui_pixel_text/scr_ui_pixel_text.yy",},},
+    {"id":{"name":"sh_ball_scroll","path":"shaders/sh_ball_scroll/sh_ball_scroll.yy",},},
     {"id":{"name":"snd_cushion","path":"sounds/snd_cushion/snd_cushion.yy",},},
     {"id":{"name":"snd_foul","path":"sounds/snd_foul/snd_foul.yy",},},
     {"id":{"name":"snd_item","path":"sounds/snd_item/snd_item.yy",},},

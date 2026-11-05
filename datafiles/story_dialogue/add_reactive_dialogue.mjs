@@ -31,8 +31,8 @@ add('EVT-PLAYER-FOUL-01','player_foul','붉은 공에 닿았네요. 승부가 �
 add('EVT-PLAYER-FOUL-02','player_foul','아쉬운 실수예요. 제가 그 틈을 놓칠 것 같나요?','손님 샷 파울=true; 0점 놀림보다 우선','B');
 add('EVT-BARTENDER-FOUL-01','bartender_foul','제 실수예요. 이번엔 당신이 웃을 차례군요.','바텐더 샷 파울=true; 0점 반응보다 우선','A');
 add('EVT-BARTENDER-FOUL-02','bartender_foul','이런, 붉은 공이라니. 방심한 값을 치렀네요.','바텐더 샷 파울=true; 0점 반응보다 우선','B');
-add('EVT-CLOSE-01','close_score','점수 차가 200점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.','양측 총점>0, abs(손님 총점-바텐더 총점)<=200, 어느 쪽도 300점 도달 전','A');
-add('EVT-CLOSE-02','close_score','바로 뒤에 있군요. 좋아요, 이래야 승부답죠.','양측 총점>0, abs(손님 총점-바텐더 총점)<=200, 어느 쪽도 300점 도달 전','B');
+add('EVT-CLOSE-01','close_score','점수 차가 1,600점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.','양측 총점>0, abs(손님 총점-바텐더 총점)<=1600, 어느 쪽도 300점 도달 전','A');
+add('EVT-CLOSE-02','close_score','바로 뒤에 있군요. 좋아요, 이래야 승부답죠.','양측 총점>0, abs(손님 총점-바텐더 총점)<=1600, 어느 쪽도 300점 도달 전','B');
 add('EVT-PLAYER-SCORE-01','player_shot_score','좋은 샷이에요. 각도를 잘 읽으셨네요.','손님 단일 샷 확정 유효 득점 100~1000 포함, 파울=false','A');
 add('EVT-BARTENDER-SCORE-01','bartender_shot_score','깔끔하게 들어갔죠? 제 점수도 올라갑니다.','바텐더 단일 샷 확정 유효 득점 100~1000 포함, 파울=false','A');
 add('EVT-BARTENDER-MISS-01','bartender_shot_zero','이런, 제 공도 말을 안 듣네요. 이번엔 당신 차례예요.','바텐더 샷 득점=0, 파울=false','A');

@@ -1,4 +1,4 @@
-"""Mirror story_ai_fixture layout to ensure at least one 2-5 cushion target hit exists."""
+"""Mirror story_ai_fixture layout to ensure scoring cushion paths exist."""
 from __future__ import annotations
 
 import math
@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 BOUNDS = dict(left=210, top=140, right=1070, bottom=560)
-MIN_C, MAX_C = 2, 5
+MIN_C = 2
 POWERS = [6, 9, 12, 15, 18]
 MAX_STEPS = 720
 STOP = 0.08
@@ -77,7 +77,7 @@ def simulate(direction: float, power: float) -> dict:
     striker = next(i for i, b in enumerate(balls) if b["kind"] == "ai")
     rad = math.radians(direction)
     balls[striker]["vx"] = math.cos(rad) * power
-    balls[striker]["vy"] = math.sin(rad) * power
+    balls[striker]["vy"] = -math.sin(rad) * power
     state = {"cushions": 0, "hit_target": False, "foul": False}
 
     for _ in range(MAX_STEPS):
@@ -104,11 +104,10 @@ def simulate(direction: float, power: float) -> dict:
                     pair_collide(balls[i], balls[j])
                     if i == striker or j == striker:
                         other = balls[j if i == striker else i]
-                        if not state["hit_target"] and not state["foul"]:
-                            if other["kind"] == "target":
-                                state["hit_target"] = True
-                            if other["kind"] == "foul":
-                                state["foul"] = True
+                        if other["kind"] == "foul":
+                            state["foul"] = True
+                        if not state["hit_target"] and not state["foul"] and other["kind"] == "target":
+                            state["hit_target"] = True
     return state
 
 
@@ -119,14 +118,24 @@ def main() -> None:
             result = simulate(direction, power)
             if result["foul"] or not result["hit_target"]:
                 continue
-            if MIN_C <= result["cushions"] <= MAX_C:
+            if result["cushions"] >= MIN_C:
                 found = True
                 break
         if found:
             break
     if not found:
-        raise AssertionError("fixture layout has no 2-5 cushion valid AI shot in python mirror sim")
+        raise AssertionError("fixture layout has no scoring cushion AI shot in python mirror sim")
+    if not fixture_has_recovery_foul_shot():
+        raise AssertionError("fixture layout has no simulated foul contact shot for recovery")
     print("story_ai_fixture_sim: ok")
+
+
+def fixture_has_recovery_foul_shot() -> bool:
+    for direction in range(0, 360, 6):
+        for power in POWERS:
+            if simulate(direction, power)["foul"]:
+                return True
+    return False
 
 
 if __name__ == "__main__":

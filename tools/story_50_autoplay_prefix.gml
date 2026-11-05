@@ -1,12 +1,23 @@
 // Temporary full-physics playthrough driver, prepended to the story controller Step.
+game_set_speed(600, gamespeed_fps);
 global.story_dialogue_timer = 0;
 global.story_reaction_timer = 0;
 global.story_turn_banner_pending = false;
 global.story_turn_banner_timer = 0;
 if (global.story_turn == STORY_TURN_AI) ai_turn_delay = 1;
 if (!variable_global_exists("story_autoplay_last_reported")) global.story_autoplay_last_reported = -1;
+if (!variable_global_exists("story_autoplay_previous_ai_score")) global.story_autoplay_previous_ai_score = 0;
 if (global.story_completed_pairs != global.story_autoplay_last_reported) {
     global.story_autoplay_last_reported = global.story_completed_pairs;
+    var _metrics_file = (global.story_completed_pairs == 0)
+        ? file_text_open_write("story50_autoplay_ai_metrics.txt")
+        : file_text_open_append("story50_autoplay_ai_metrics.txt");
+    file_text_write_string(_metrics_file, string(global.story_completed_pairs)
+        + "," + string(global.story_ai_score - global.story_autoplay_previous_ai_score)
+        + "," + string(global.story_ai_score));
+    file_text_writeln(_metrics_file);
+    file_text_close(_metrics_file);
+    global.story_autoplay_previous_ai_score = global.story_ai_score;
     var _progress_file = file_text_open_write("story50_autoplay_progress_final.txt");
     file_text_write_string(_progress_file, "pairs=" + string(global.story_completed_pairs)
         + " player=" + string(global.story_player_score)
@@ -18,7 +29,12 @@ if (global.story_match_over) {
     file_text_write_string(_done_file, "pairs=" + string(global.story_completed_pairs)
         + " player=" + string(global.story_player_score)
         + " ai=" + string(global.story_ai_score)
-        + " winner=" + string(global.story_winner));
+        + " winner=" + string(global.story_winner)
+        + " ai_items=" + string(global.story_ai_item_use_counts[0]) + "/"
+            + string(global.story_ai_item_use_counts[1]) + "/"
+            + string(global.story_ai_item_use_counts[2])
+        + " foul_removed=" + string(global.story_foul_removed_total)
+        + " risk_below_100k=" + string(global.story_ai_risk_below_threshold_uses));
     file_text_close(_done_file);
     game_end();
     exit;

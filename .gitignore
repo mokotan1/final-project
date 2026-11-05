@@ -62,3 +62,24 @@ Temporary Items
 Build
 # Local browser automation logs
 .playwright-mcp/
+
+# Unity port
+UnityPort/[Ll]ibrary/
+UnityPort/[Tt]emp/
+UnityPort/[Ll]ogs/
+UnityPort/[Uu]serSettings/
+UnityPort/[Bb]uilds/
+UnityPort/[Oo]bj/
+UnityPort/.vscode/
+UnityPort/_test_work/
+UnityPort/_scene_setup_work/
+UnityPort/CaptureDevlog/
+UnityPort/*.csproj
+UnityPort/*.sln*
+UnityPort/test-results.xml
+
+
+# capture outputs
+output/
+tools/__pycache__/
+

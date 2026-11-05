@@ -43,7 +43,7 @@ function tr_item_effect(_item) {
     switch (_item) {
         case 1: return tr("Place cue ball in an open spot.", "빈 곳에 공을 놓습니다.");
         case 2: return tr("Next shot: 10x per cushion.", "다음 샷은 쿠션마다 10배입니다.");
-        case 3: return tr("Remove one foul ball.", "파울 공 하나를 제거합니다.");
+        case 3: return tr("Remove all foul balls for this turn. They return afterward.", "이번 턴 동안 파울 공을 모두 치웁니다. 턴이 끝나면 돌아옵니다.");
     }
     return tr("Unknown item.", "알 수 없는 아이템입니다.");
 }

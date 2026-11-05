@@ -67,6 +67,10 @@ require([name for name, _ in order][:3] == ["rm_story_intro", "rm_menu", "rm_gam
         and "rm_result" not in [name for name, _ in order],
         f"story intro, menu, and game must lead, with no separate result room: {[name for name, _ in order]}")
 
+intro_create = (ROOT / "objects/obj_story_intro/Create_0.gml").read_text(encoding="utf-8")
+require("room_goto(rm_story_ai_verify)" not in intro_create,
+        "story intro Create contains a direct verification-room jump")
+
 menu_room = (ROOT / "rooms/rm_menu/rm_menu.yy").read_text(encoding="utf-8")
 require('"Width":1280' in menu_room and '"Height":720' in menu_room, "rm_menu must be 1280 x 720")
 require('"name":"obj_menu"' in menu_room, "rm_menu must contain obj_menu")

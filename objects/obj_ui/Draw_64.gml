@@ -134,12 +134,15 @@ if (variable_global_exists("score_gain_fx") && global.score_gain_fx.active) {
     draw_set_color(make_color_rgb(255, 207, 78));
     draw_roundrect(_gui_w * 0.5 - 260, _big_y - 92, _gui_w * 0.5 + 260, _big_y + 96, true);
     var _big_title = (_big.life - _big.age <= 60) ? "PAYOUT!" : "BIG SCORE";
-    pixel_draw_text_transformed(_gui_w * 0.5, _big_y - 62, _big_title, 1.4, 1.4, 0);
+    pixel_draw_text_transformed(_gui_w * 0.5, _big_y - 62, _big_title, 1.4, 1.4, 0,
+        false, 11, 1);
     pixel_draw_text_transformed(_gui_w * 0.5, _big_y - 6,
-        "+" + string(round(_big.gain * _big_eased)), _number_scale, _number_scale, 0);
+        "+" + string(round(_big.gain * _big_eased)), _number_scale, _number_scale, 0,
+        false, 11, 3);
     draw_set_color(c_white);
     pixel_draw_text_transformed(_gui_w * 0.5, _big_y + 62,
-        "TOTAL " + string(_big.from + round(_big.gain * _big_eased)), 1.25, 1.25, 0);
+        "TOTAL " + string(_big.from + round(_big.gain * _big_eased)), 1.25, 1.25, 0,
+        false, 11, 1);
 }
 if (variable_global_exists("score_void_fx") && global.score_void_fx.active) {
     var _void = global.score_void_fx;

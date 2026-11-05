@@ -4,7 +4,8 @@
 #macro STORY_TURN_AI 1
 #macro STORY_MAX_TURNS 50
 #macro STORY_SCORE_MAX 999999999
-#macro STORY_AI_SOFT_LEAD_END 1500
+#macro STORY_AI_SOFT_LEAD_END 9600
+#macro STORY_AI_CLOSE_MATCH_DIFF 1600
 #macro STORY_TURN_BANNER_SECONDS 0.5
 #macro STORY_AI_TURN_DELAY_SECONDS 0.5
 
@@ -111,6 +112,7 @@ function story_versus_init() {
     global.story_turn_banner_timer = 0;
     global.story_player_score = 0;
     global.story_ai_score = 0;
+    global.story_player_score_at_turn_start = 0;
     global.story_stage_index = 0;
     global.story_player_stage_points = 0;
     global.story_ai_stage_points = 0;
@@ -145,7 +147,17 @@ function story_versus_init() {
     global.story_last_ai_foul = false;
     global.story_last_ai_pass = false;
     global.risk_shot_armed = false;
+    global.story_ai_risk_shot_armed = false;
+    global.story_ai_recovery_risk_pending = false;
+    global.story_ai_recovery_risk_used = false;
+    global.story_ai_recovery_due_pair = -1;
+    global.story_ai_recovery_score_at_start = 0;
     global.risk_shot_active = false;
+    global.story_item_used_this_turn = false;
+    global.story_removed_foul_balls = [];
+    global.story_ai_item_use_counts = [0, 0, 0];
+    global.story_ai_risk_below_threshold_uses = 0;
+    global.story_foul_removed_total = 0;
     global.story_turn_skip_message = "";
     global.story_turn_skip_timer = 0;
     global.story_reaction_id = "";
@@ -301,7 +313,7 @@ function story_versus_stage_help_dialogue() {
         case 7: return "쿠션 두 번 먼저 만들고 목표 공 노려.";
         case 8: return "공 이동에 200점 쓰면 공 자리를 바꿀 수 있어. 그걸로 점수는 안 나와.";
         case 9: return "일반 득점은 총점엔 남는데 이번 목표엔 안 들어가.";
-        case 10: return "400점 내면 파울 공 하나 바로 치울 수 있어. 필요할 때 써.";
+        case 10: return "400점 내면 이번 턴 동안 파울 공을 모두 치워. 턴이 끝나면 돌아와.";
         case 11: return "위험 샷은 800점. 1쿠션 성공 1,000점, 2쿠션 성공 10,000점. 파울이면 누적 점수 0이야.";
         case 12: return "쿠션 두 번이랑 남은 기회 확인해.";
         case 13: return "파울 세금은 누적 총점에도 붙어.";
@@ -357,6 +369,20 @@ function story_versus_stage_limited_recovery() {
         || global.story_stage_index == 12 || global.story_stage_index == 15);
 }
 
+/// Once per 50-round match: after the player loses score while the bartender leads by 100k+,
+/// schedule a random bartender hand within the next 10 hands (bounded by match end).
+function story_versus_try_schedule_ai_recovery_risk(_player_score_before) {
+    if (!story_versus_is_fifty_round_match() || global.story_break_pending) return;
+    if (global.story_ai_recovery_risk_used || global.story_ai_recovery_due_pair >= 0) return;
+    if (global.story_player_score >= _player_score_before) return;
+    if (global.story_ai_score - global.story_player_score < STORY_AI_RISK_LEAD) return;
+    global.story_ai_recovery_due_pair = min(story_versus_max_turns(),
+        story_versus_current_round_number() + irandom(9));
+    show_debug_message("STORY_AI_RECOVERY_SCHEDULE hand=" + string(story_versus_current_round_number())
+        + " due=" + string(global.story_ai_recovery_due_pair)
+        + " ai=" + string(global.story_ai_score) + " player=" + string(global.story_player_score));
+}
+
 function story_versus_stage_risk_contract() {
     if (story_versus_is_fifty_round_match()) return false;
     return (global.story_stage_index == 9 || global.story_stage_index == 11
@@ -404,13 +430,30 @@ function story_versus_opening_dialogue_active() {
 
 function story_versus_queue_reaction(_id, _text, _frames) {
     if (_id == "" || _frames <= 0) return;
-    var _line = { id: _id, text: _text, frames: _frames };
+    // Short reactions stay readable without holding the shared dialogue box
+    // for the old fixed four to six seconds.
+    var _reading_frames = clamp(room_speed + string_length(_text) * 2,
+        room_speed * 2, room_speed * 4);
+    var _line = { id: _id, text: _text, frames: min(_frames, _reading_frames) };
     if (global.story_reaction_timer <= 0 && global.story_dialogue_timer <= 0
         && array_length(global.story_reaction_queue) == 0) {
         global.story_reaction_id = _line.id;
         global.story_reaction_text = _line.text;
         global.story_reaction_timer = _line.frames;
     } else array_push(global.story_reaction_queue, _line);
+}
+
+function story_versus_skippable_dialogue_active() {
+    if (!story_versus_active() || global.story_match_over
+        || global.story_stage_clear_pending) return false;
+    return global.story_reaction_timer > 0 || global.story_dialogue_timer > 0;
+}
+
+function story_versus_skip_dialogue() {
+    if (!story_versus_skippable_dialogue_active()) return false;
+    if (global.story_dialogue_timer > 0) global.story_dialogue_timer = 0;
+    else global.story_reaction_timer = 0;
+    return true;
 }
 
 function story_versus_advance_reaction_display() {
@@ -467,7 +510,15 @@ function story_versus_points_for_cushions(_cushions) {
     return 100 * power(2, _cushions);
 }
 
-function story_versus_item_price(_item) {
+function story_versus_item_price(_item, _side = STORY_TURN_PLAYER) {
+    if (_side == STORY_TURN_AI) {
+        switch (_item) {
+            case 1: return 800;
+            case 2: return 3200;
+            case 3: return 1600;
+        }
+        return -1;
+    }
     switch (_item) {
         case 1: return 200;
         case 2: return 800;
@@ -491,15 +542,25 @@ function story_versus_show_help() {
     return true;
 }
 
-function story_versus_purchase_item(_item) {
-    if (!story_versus_is_human_turn()) return false;
-    var _price = story_versus_item_price(_item);
+function story_versus_purchase_item_for_side(_side, _item, _recovery = false) {
+    if (_side == STORY_TURN_PLAYER) {
+        if (!story_versus_is_human_turn()) return false;
+    } else if (_side == STORY_TURN_AI) {
+        if (!story_versus_is_ai_turn()) return false;
+    } else return false;
+    if (global.story_item_used_this_turn) return false;
+    if (_side == STORY_TURN_AI && _item == 2 && !_recovery
+        && global.story_player_score - global.story_ai_score < STORY_AI_RISK_LEAD) return false;
+    var _price = story_versus_item_price(_item, _side);
     if (_price < 0) return false;
-    if (global.story_player_score < _price) {
-        switch (_item) {
-            case 1: story_versus_set_item_message("공 이동은 200점이야. 지금 점수로는 살 수 없네."); break;
-            case 2: story_versus_set_item_message("위험 샷은 800점이야. 지금 점수로는 살 수 없네."); break;
-            case 3: story_versus_set_item_message("파울 제거는 400점이야. 지금 점수로는 살 수 없네."); break;
+    var _score = (_side == STORY_TURN_PLAYER) ? global.story_player_score : global.story_ai_score;
+    if (_score < _price) {
+        if (_side == STORY_TURN_PLAYER) {
+            switch (_item) {
+                case 1: story_versus_set_item_message("공 이동은 200점이야. 지금 점수로는 살 수 없네."); break;
+                case 2: story_versus_set_item_message("위험 샷은 800점이야. 지금 점수로는 살 수 없네."); break;
+                case 3: story_versus_set_item_message("파울 제거는 400점이야. 지금 점수로는 살 수 없네."); break;
+            }
         }
         return false;
     }
@@ -507,39 +568,60 @@ function story_versus_purchase_item(_item) {
     var _applied = false;
     switch (_item) {
         case 1:
-            global.place_mode = true;
-            global.place_from_item = true;
-            story_versus_set_item_message("200점을 내고 공을 옮겼어. 이동 자체로 점수는 없어.");
-            _applied = true;
+            if (_side == STORY_TURN_PLAYER) {
+                global.place_mode = true;
+                global.place_from_item = true;
+                story_versus_set_item_message("200점을 내고 공을 옮겼어. 이동 자체로 점수는 없어.");
+                _applied = true;
+            } else _applied = story_ai_auto_place_ball();
             break;
         case 2:
-            if (!global.risk_shot_armed) {
+            if (_side == STORY_TURN_PLAYER && !global.risk_shot_armed) {
                 global.risk_shot_armed = true;
                 story_versus_set_item_message(story_versus_is_fifty_round_match()
                     ? "800점을 내고 위험 샷을 골랐어. 100×10^쿠션이야. 7쿠션 이상은 점수 상한."
                     : "800점을 내고 위험 샷을 골랐어. 1쿠션은 1,000점, 2쿠션은 10,000점이야.");
                 _applied = true;
+            } else if (_side == STORY_TURN_AI && !global.story_ai_risk_shot_armed) {
+                global.story_ai_risk_shot_armed = true;
+                _applied = true;
             }
             break;
         case 3:
             var _foul_object = asset_get_index("obj_ball_foul");
-            if (_foul_object != -1 && instance_number(_foul_object) > 0) {
-                var _foul = instance_find(_foul_object, instance_number(_foul_object) - 1);
-                if (_foul != noone) {
-                    with (_foul) instance_destroy();
-                    global.foul_count = max(0, global.foul_count - 1);
-                    story_versus_set_item_message("400점을 내고 파울 공 하나를 치웠어.");
-                    _applied = true;
+            var _removed = (_foul_object == -1) ? 0 : instance_number(_foul_object);
+            if (_removed > 0) {
+                global.story_removed_foul_balls = [];
+                for (var _foul_index = 0; _foul_index < _removed; _foul_index++) {
+                    var _foul_ball = instance_find(_foul_object, _foul_index);
+                    array_push(global.story_removed_foul_balls, { x: _foul_ball.x, y: _foul_ball.y });
                 }
+                with (_foul_object) instance_destroy();
+                global.foul_count = max(0, global.foul_count - _removed);
+                global.story_foul_removed_total += _removed;
+                if (_side == STORY_TURN_PLAYER)
+                    story_versus_set_item_message("400점을 내고 이번 턴 동안 파울 공을 모두 치웠어.");
+                _applied = true;
             }
             break;
     }
     if (!_applied) return false;
-    if (story_versus_is_fifty_round_match()) {
+    if (_side == STORY_TURN_PLAYER) {
         global.story_player_score = story_score_clamp_integer(global.story_player_score - _price, 0, STORY_SCORE_MAX);
-    } else global.story_player_score -= _price;
+        if (!_recovery) story_versus_try_schedule_ai_recovery_risk(_score);
+    } else global.story_ai_score = story_score_clamp_integer(global.story_ai_score - _price, 0, STORY_SCORE_MAX);
+    if (_side == STORY_TURN_AI) {
+        global.story_ai_item_use_counts[_item - 1] += 1;
+        if (_item == 2 && !_recovery && global.story_player_score - _score < STORY_AI_RISK_LEAD)
+            global.story_ai_risk_below_threshold_uses += 1;
+    }
+    global.story_item_used_this_turn = true;
     audio_sfx("snd_item", 0.6);
     return true;
+}
+
+function story_versus_purchase_item(_item) {
+    return story_versus_purchase_item_for_side(STORY_TURN_PLAYER, _item);
 }
 
 function story_versus_on_shot_started(_ball) {
@@ -568,8 +650,16 @@ function story_versus_on_shot_started(_ball) {
     global.score_gain_fx.active = false;
     global.shot_loss_reason = "";
     global.shot_loss_timer = 0;
-    global.risk_shot_active = global.risk_shot_armed;
-    global.risk_shot_armed = false;
+    if (_is_player) {
+        global.story_player_score_at_turn_start = global.story_player_score;
+        global.risk_shot_active = global.risk_shot_armed;
+        global.risk_shot_armed = false;
+    } else {
+        global.risk_shot_active = global.story_ai_risk_shot_armed;
+        global.story_ai_risk_shot_armed = false;
+        if (global.story_ai_recovery_risk_pending)
+            global.story_ai_recovery_score_at_start = global.story_ai_score;
+    }
     return true;
 }
 
@@ -641,8 +731,10 @@ function story_versus_on_foul_hit(_player_ball, _foul_ball) {
     global.shot_loss_timer = room_speed * 2;
     global.score_void_fx = {
         active: true,
-        from: (global.story_turn == STORY_TURN_PLAYER && global.risk_shot_active)
-            ? global.story_player_score + global.shot_pending_points : global.shot_pending_points,
+        from: global.risk_shot_active
+            ? ((global.story_turn == STORY_TURN_PLAYER) ? global.story_player_score : global.story_ai_score)
+                + global.shot_pending_points
+            : global.shot_pending_points,
         x: _player_ball.x,
         y: _player_ball.y,
         age: 0,
@@ -650,10 +742,15 @@ function story_versus_on_foul_hit(_player_ball, _foul_ball) {
     };
     global.shot_pending_points = 0;
     global.score_gain_fx.active = false;
-    if (global.story_turn == STORY_TURN_PLAYER && global.risk_shot_active) {
-        global.story_player_score = 0;
-        if (!story_versus_is_fifty_round_match()) global.story_player_stage_points = 0;
-        story_versus_set_item_message("파울이야. 위험 샷의 대가로 누적 점수가 0이 됐어.");
+    if (global.risk_shot_active) {
+        if (global.story_turn == STORY_TURN_PLAYER) {
+            global.story_player_score = 0;
+            if (!story_versus_is_fifty_round_match()) global.story_player_stage_points = 0;
+            story_versus_set_item_message("파울이야. 위험 샷의 대가로 누적 점수가 0이 됐어.");
+        } else {
+            global.story_ai_score = 0;
+            if (!story_versus_is_fifty_round_match()) global.story_ai_stage_points = 0;
+        }
     }
     global.payout_fx = [];
     global.cushion_fx = [];
@@ -728,10 +825,10 @@ function story_versus_react_to_shot(_turn, _points, _foul) {
         } else if (global.story_ai_score > 0
             && (story_versus_is_fifty_round_match()
                 || (global.story_player_score < 300 && global.story_ai_score < 300))
-            && abs(global.story_player_score - global.story_ai_score) <= 200) {
+            && abs(global.story_player_score - global.story_ai_score) <= STORY_AI_CLOSE_MATCH_DIFF) {
             if (global.story_close_reactions mod 2 == 0) {
                 _id = "EVT-CLOSE-01";
-                _text = "점수 차가 200점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.";
+                _text = "점수 차가 1,600점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.";
             } else {
                 _id = "EVT-CLOSE-02";
                 _text = "바로 뒤에 있군요. 좋아요, 이래야 승부답죠.";
@@ -763,10 +860,10 @@ function story_versus_react_to_shot(_turn, _points, _foul) {
         } else if (_points > 0 && global.story_player_score > 0
             && (story_versus_is_fifty_round_match()
                 || (global.story_player_score < 300 && global.story_ai_score < 300))
-            && abs(global.story_player_score - global.story_ai_score) <= 200) {
+            && abs(global.story_player_score - global.story_ai_score) <= STORY_AI_CLOSE_MATCH_DIFF) {
             if (global.story_close_reactions mod 2 == 0) {
                 _id = "EVT-CLOSE-01";
-                _text = "점수 차가 200점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.";
+                _text = "점수 차가 1,600점 이내네요. 이제 한 번의 쿠션이 승부를 바꿔요.";
             } else {
                 _id = "EVT-CLOSE-02";
                 _text = "바로 뒤에 있군요. 좋아요, 이래야 승부답죠.";
@@ -849,7 +946,18 @@ function story_versus_check_match_over() {
     return false;
 }
 
+function story_versus_restore_removed_fouls() {
+    for (var _i = 0; _i < array_length(global.story_removed_foul_balls); _i++) {
+        var _position = global.story_removed_foul_balls[_i];
+        story_versus_spawn_ball_at("obj_ball_foul", _position.x, _position.y);
+    }
+    global.story_removed_foul_balls = [];
+    global.foul_count = instance_number(obj_ball_foul);
+}
+
 function story_versus_advance_turn() {
+    story_versus_restore_removed_fouls();
+    global.story_item_used_this_turn = false;
     global.story_turn = (global.story_turn == STORY_TURN_PLAYER) ? STORY_TURN_AI : STORY_TURN_PLAYER;
     global.story_striker_ball = noone;
     global.story_turn_banner_pending = (variable_global_exists("story_intro_match") && global.story_intro_match);
@@ -858,6 +966,11 @@ function story_versus_advance_turn() {
 
 function story_versus_on_shot_ended() {
     if (!global.shot_active) return false;
+
+    global.story_item_used_this_turn = false;
+
+    var _recovery_risk_shot = (global.story_turn == STORY_TURN_AI
+        && global.story_ai_recovery_risk_pending && global.risk_shot_active);
 
     var _shot_turn = global.story_turn;
     var _shot_points = (global.shot_scored && !global.shot_penalized) ? global.shot_pending_points : 0;
@@ -868,6 +981,18 @@ function story_versus_on_shot_ended() {
         global.story_last_ai_actual_cushions = global.shot_cushion_count;
         global.story_last_ai_actual_points = (global.shot_scored && !global.shot_penalized) ? global.shot_pending_points : 0;
         global.story_last_ai_foul = global.shot_penalized;
+    }
+
+    if (_recovery_risk_shot) {
+        global.story_ai_recovery_risk_used = true;
+        global.story_ai_recovery_risk_pending = false;
+        show_debug_message("STORY_AI_RECOVERY_RISK_SETTLE hand=" + string(global.story_completed_pairs + 1)
+            + " foul=" + string(global.shot_penalized)
+            + " scored=" + string(global.shot_scored && !global.shot_penalized)
+            + " ai=" + string(global.story_ai_score)
+            + " player=" + string(global.story_player_score));
+    } else if (global.story_ai_recovery_risk_pending) {
+        global.story_ai_recovery_risk_pending = false;
     }
 
     if (global.shot_scored && !global.shot_penalized) {
@@ -890,6 +1015,11 @@ function story_versus_on_shot_ended() {
         story_versus_spend_chance_active_side();
     }
 
+    if (story_versus_is_fifty_round_match() && _shot_turn == STORY_TURN_PLAYER
+        && variable_global_exists("story_player_score_at_turn_start")) {
+        story_versus_try_schedule_ai_recovery_risk(global.story_player_score_at_turn_start);
+    }
+
     if (!global.story_match_over) {
         story_versus_react_to_shot(_shot_turn, _shot_points, _shot_foul);
         if (story_versus_is_fifty_round_match() && _shot_turn == STORY_TURN_AI
@@ -903,6 +1033,7 @@ function story_versus_on_shot_ended() {
     global.risk_shot_active = false;
     global.spawn_retry_armed = true;
     global.story_shot_is_break = false;
+    story_versus_restore_removed_fouls();
 
     if (story_versus_is_fifty_round_match()) {
         global.story_striker_ball = noone;
@@ -948,6 +1079,9 @@ function story_versus_on_shot_ended() {
 
 function story_versus_pass_turn_no_shot(_message) {
     if (global.story_match_over || global.shot_active || global.balls_moving) return false;
+    story_versus_restore_removed_fouls();
+    global.story_item_used_this_turn = false;
+    global.story_ai_risk_shot_armed = false;
     if (story_versus_is_fifty_round_match()) {
         if (global.story_turn != STORY_TURN_AI) return false;
         global.story_ai_shot_was_gentle = false;
@@ -1023,6 +1157,15 @@ function story_versus_spawn_layout() {
     }
 }
 
+// Select an existing portrait expression for the currently visible dialogue.
+function story_versus_portrait_frame(_id) {
+    if (string_pos("PLAYER-HIGH", _id) > 0) return 4;
+    if (string_pos("BARTENDER-FOUL", _id) > 0 || string_pos("BARTENDER-MISS", _id) > 0) return 3;
+    if (string_pos("BARTENDER-HIGH", _id) > 0 || string_pos("BARTENDER-SCORE", _id) > 0) return 2;
+    if (string_pos("PLAYER-SCORE", _id) > 0 || _id == "GENTLE") return 5;
+    return 1;
+}
+
 function story_versus_draw_hud() {
     var _gui_w = display_get_gui_width();
     if (variable_global_exists("story_intro_match") && global.story_intro_match) {
@@ -1065,6 +1208,7 @@ function story_versus_draw_hud() {
         ui_text_fit_px(_column_2, 43, _turn_label, _column_w - 12, 2, make_color_rgb(213, 168, 85));
         ui_text_fit_px(_column_3, 43, "H 도움말", _column_w - 12, 2, c_white);
         if (global.story_turn_banner_timer > 0 && !global.story_match_over) {
+            var _banner_y = (global.story_reaction_timer > 0 || global.story_dialogue_timer > 0) ? 242 : 166;
             var _banner_alpha = min(1, global.story_turn_banner_timer / 6,
                 (round(room_speed * STORY_TURN_BANNER_SECONDS) - global.story_turn_banner_timer) / 6);
             var _banner_color = (global.story_turn == STORY_TURN_PLAYER)
@@ -1076,12 +1220,12 @@ function story_versus_draw_hud() {
                     + ((_banner_round == story_versus_max_turns()) ? " (마지막)" : ""));
             draw_set_alpha(0.9 * _banner_alpha);
             draw_set_color(make_color_rgb(10, 23, 27));
-            draw_roundrect(_gui_w * 0.5 - 220, 166, _gui_w * 0.5 + 220, 230, false);
+            draw_roundrect(_gui_w * 0.5 - 220, _banner_y, _gui_w * 0.5 + 220, _banner_y + 64, false);
             draw_set_alpha(_banner_alpha);
             draw_set_color(_banner_color);
-            draw_roundrect(_gui_w * 0.5 - 220, 166, _gui_w * 0.5 + 220, 230, true);
+            draw_roundrect(_gui_w * 0.5 - 220, _banner_y, _gui_w * 0.5 + 220, _banner_y + 64, true);
             draw_set_halign(fa_center);
-            pixel_draw_text_transformed(_gui_w * 0.5, 184, _banner_text, 2, 2, 0, true);
+            pixel_draw_text_transformed(_gui_w * 0.5, _banner_y + 18, _banner_text, 2, 2, 0, true);
             draw_set_alpha(1);
         }
         if (global.story_match_over) {
@@ -1123,7 +1267,9 @@ function story_versus_draw_hud() {
                 pixel_draw_text_transformed(_gui_w * 0.5, _shop_y - 36, "상점", 1, 1, 0, false);
                 for (var _shop_i = 0; _shop_i < 3; _shop_i++) {
                     var _shop_x = _shop_start_x + _shop_i * (_shop_size + _shop_gap);
-                    var _can_buy = _shop_active && global.story_player_score >= _shop_prices[_shop_i];
+                    var _can_buy = _shop_active && !global.story_item_used_this_turn
+                        && global.story_player_score >= _shop_prices[_shop_i]
+                        && (_shop_i != 2 || instance_number(obj_ball_foul) > 0);
                     var _price_hover = _can_buy && ui_button_hit(_shop_mx, _shop_my, _shop_x, _shop_y, _shop_size, _shop_size);
                     var _ui_owner = instance_find(obj_ui, 0);
                     var _shop_state = UI_BUTTON_DISABLED;
@@ -1154,21 +1300,42 @@ function story_versus_draw_hud() {
                 pixel_draw_text_transformed(24, 244, global.story_item_message, 1, 1, 0, false);
             }
             if (global.story_reaction_timer > 0 || global.story_dialogue_timer > 0) {
+                var _dialogue_active = global.story_dialogue_timer > 0;
+                var _dialogue_line = _dialogue_active ? global.story_dialogue_text : global.story_reaction_text;
+                var _dialogue_id = _dialogue_active ? global.story_dialogue_id : global.story_reaction_id;
                 draw_set_color(make_color_rgb(13, 37, 32));
-                draw_set_alpha(0.94);
-                draw_rectangle(170, 84, 1110, 132, false);
+                draw_set_alpha(0.96);
+                draw_rectangle(170, 84, 1110, 234, false);
                 draw_set_alpha(1);
                 draw_set_color(make_color_rgb(205, 165, 80));
-                draw_rectangle(170, 84, 1110, 132, true);
-                draw_sprite_ext(spr_assistant_dialogue, 0, 1080, 130, 0.05, 0.05, 0, c_white, 1);
-                draw_set_color(make_color_rgb(239, 225, 193));
-                var _dialogue_line = (global.story_dialogue_timer > 0)
-                    ? global.story_dialogue_text : global.story_reaction_text;
+                draw_rectangle(170, 84, 1110, 234, true);
+                draw_set_color(make_color_rgb(33, 66, 53));
+                draw_rectangle(178, 92, 322, 226, false);
+                // Crop the upper body to keep the face readable within the panel.
+                draw_sprite_part_ext(spr_assistant_dialogue, story_versus_portrait_frame(_dialogue_id),
+                    0, 0, 342, 380, 192, 94, 0.34, 0.34, c_white, 1);
                 draw_set_halign(fa_left);
-                pixel_draw_text_transformed(190, 102, "바텐더: " + _dialogue_line, 1, 1, 0, false);
+                draw_set_valign(fa_top);
+                draw_set_color(make_color_rgb(232, 189, 104));
+                pixel_draw_text_transformed(346, 99, "바텐더", 1.6, 1.6, 0, true);
+                if (story_versus_opening_dialogue_active()) {
+                    draw_set_halign(fa_right);
+                    pixel_draw_text_transformed(1088, 102, "클릭 / ENTER", 1, 1, 0, false);
+                    draw_set_halign(fa_left);
+                }
+                draw_set_color(make_color_rgb(239, 225, 193));
+                var _previous_font = draw_get_font();
+                var _dialogue_font = ui_galmuri_font(2);
+                if (_dialogue_font != -1) {
+                    draw_set_font(_dialogue_font);
+                    draw_text_ext(346, 132, _dialogue_line, 27, 735);
+                    draw_set_font(_previous_font);
+                }
             }
-            if (global.story_turn_skip_timer > 0)
-                pixel_draw_text_transformed(24, 144, global.story_turn_skip_message, 1, 1, 0, false);
+            if (global.story_turn_skip_timer > 0) {
+                var _skip_y = (global.story_reaction_timer > 0 || global.story_dialogue_timer > 0) ? 314 : 144;
+                pixel_draw_text_transformed(24, _skip_y, global.story_turn_skip_message, 1, 1, 0, false);
+            }
         }
         return;
     }

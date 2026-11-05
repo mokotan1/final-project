@@ -18,5 +18,8 @@ ui_press_frames = 0;
 ui_press_action = "";
 if (!variable_global_exists("audio_enabled")) global.audio_enabled = true;
 lang_init(); lang_font_init();
+// Build the two reusable score-effect fonts while the room is loading.
+ui_galmuri_font(1);
+ui_galmuri_font(3);
 audio_volume_init();
 settings_dragging = false;

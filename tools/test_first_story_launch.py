@@ -27,6 +27,7 @@ def test_story_entry_has_distinct_seen_and_completed_flags():
     assert 'asset_get_index("rm_menu")' in source
     assert 'if (_match_done > 0 || _intro_seen > 0)' in source
     assert 'asset_get_index("rm_story_ai_verify")' not in source
+    assert 'room_goto(rm_story_ai_verify)' not in source
     assert 'asset_get_index("rm_story_ai_verify")' in step
     menu = (ROOT / "objects/obj_menu/Step_0.gml").read_text(encoding="utf-8")
     assert "application_start_story()" in menu

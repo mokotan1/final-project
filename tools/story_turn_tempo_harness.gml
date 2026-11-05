@@ -10,10 +10,24 @@ global.story_dialogue_timer = room_speed;
 global.story_turn_banner_pending = false;
 global.story_turn_banner_timer = 0;
 if (story_versus_is_ai_turn()) _failures += "opening-rule-unlocked ";
+if (!story_versus_skip_dialogue()) _failures += "opening-rule-not-skippable ";
+story_versus_advance_rule_dialogue();
+if (global.story_dialogue_id != "RULE-02" || global.story_dialogue_timer <= 0)
+    _failures += "opening-next-rule ";
+if (!story_versus_skip_dialogue()) _failures += "rule-2-not-skippable ";
+story_versus_advance_rule_dialogue();
+if (global.story_dialogue_id != "RULE-03") _failures += "opening-third-rule ";
+if (!story_versus_skip_dialogue()) _failures += "rule-3-not-skippable ";
+story_versus_advance_rule_dialogue();
+if (global.story_dialogue_id != "BREAK-ASSIGN" || !story_versus_opening_dialogue_active())
+    _failures += "opening-break-assign ";
+if (!story_versus_skip_dialogue() || story_versus_opening_dialogue_active())
+    _failures += "opening-break-skip ";
 
 global.story_rule_dialogue_index = 2;
 global.story_break_assign_dialogue_pending = false;
 global.story_dialogue_id = "BREAK-ASSIGN";
+global.story_dialogue_timer = room_speed;
 if (story_versus_is_ai_turn()) _failures += "breaker-line-unlocked ";
 
 global.story_break_pending = false;
@@ -64,7 +78,7 @@ if (global.story_reaction_timer != _held_frames) _failures += "help-hides-reacti
 global.story_dialogue_timer = 0;
 global.story_reaction_timer = 1;
 story_versus_advance_reaction_display();
-if (global.story_reaction_id != "SECOND" || global.story_reaction_timer != room_speed * 4
+if (global.story_reaction_id != "SECOND" || global.story_reaction_timer != clamp(room_speed + string_length("Second line") * 2, room_speed * 2, room_speed * 4)
     || array_length(global.story_reaction_queue) != 0) _failures += "reaction-queue-drain ";
 
 story_versus_init();
